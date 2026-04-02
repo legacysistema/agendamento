@@ -979,17 +979,12 @@ function renderCal(){
     if(diasDisponiveis.has(s.data)) return;
     var dt2=parseDate(s.data);
     if(dt2<hoje) return;
-    if(diaTemHorarioDisponivel(s.data)){
-      diasDisponiveis.add(s.data);
-    }
+    /* _slots já vêm pré-filtrados por isBloqRec — basta verificar existência */
+    diasDisponiveis.add(s.data);
   });
   /* Conta total de horários disponíveis no mês (para o label) */
   diasDisponiveis.forEach(function(iso){
-    var horasDia=_slots.filter(function(s){return s.data===iso;});
-    totalHorariosDisponiveis+=filtrarHorariosDisponiveis({
-      horarios:horasDia,bloqueios:_bloqueios,data:iso,
-      pacoteId:_pacoteId,pacoteNome:_pacoteSel,categoria:_catSel
-    }).length;
+    totalHorariosDisponiveis += _slots.filter(function(s){ return s.data === iso; }).length;
   });
 
   var diasComSlot=new Set(Array.from(diasDisponiveis).map(function(iso){return parseDate(iso).getDate();}));
@@ -1130,38 +1125,21 @@ function filtrarHorariosDisponiveis(opts){
 /**
  * diaTemHorarioDisponivel
  * Usado pelo renderCal para saber se um dia deve aparecer clicável.
- * Aplica os mesmos filtros de bloqueio que renderHorarios.
+ * Os slots em _slots já foram pré-filtrados por isBloqRec dentro de
+ * getDisponibilidade, portanto basta verificar se existe ao menos um
+ * slot para o dia — sem reprocessar bloqueios (que causava o bug de
+ * dias com horários parcialmente bloqueados aparecerem totalmente bloqueados).
  */
 function diaTemHorarioDisponivel(iso){
-  var horasDia = _slots.filter(function(s){ return s.data === iso; });
-  if(!horasDia.length) return false;
-  var livres = filtrarHorariosDisponiveis({
-    horarios:   horasDia,
-    bloqueios:  _bloqueios,
-    data:       iso,
-    pacoteId:   _pacoteId,
-    pacoteNome: _pacoteSel,
-    categoria:  _catSel
-  });
-  return livres.length > 0;
+  return _slots.some(function(s){ return s.data === iso; });
 }
 
 function renderHorarios(iso){
   var panel=ge('ag-times-panel'); var chips=ge('ag-times-chips');
   if(!panel||!chips) return;
 
-  /* Slots do dia filtrados pelas regras base */
-  var horasDia = _slots.filter(function(s){ return s.data===iso; });
-
-  /* Aplica filtro de bloqueios com prioridade pacote_id > categoria > global */
-  var horasDisp = filtrarHorariosDisponiveis({
-    horarios:   horasDia,
-    bloqueios:  _bloqueios,
-    data:       iso,
-    pacoteId:   _pacoteId,
-    pacoteNome: _pacoteSel,
-    categoria:  _catSel
-  });
+  /* Slots do dia — já pré-filtrados por isBloqRec dentro de getDisponibilidade */
+  var horasDisp = _slots.filter(function(s){ return s.data===iso; });
 
   horasDisp.sort(function(a,b){return a.horario.localeCompare(b.horario);});
 
