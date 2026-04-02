@@ -668,26 +668,8 @@ window.goStep2 = async function(){
   var now=new Date(); _calYear=now.getFullYear(); _calMonth=now.getMonth();
 
   hide('ag-cal-content'); show('ag-cal-loading');
-
-  /* Busca slots de disponibilidade E bloqueios em paralelo */
-  var hoje    = new Date();
-  var hojeStr = dateStr(hoje);
-  var fimDate = new Date(hoje); fimDate.setDate(fimDate.getDate()+90);
-  var fimStr  = dateStr(fimDate);
-
-  var resultados = await Promise.all([
-    getDisponibilidade(90, _catSel, _pacoteSel),
-    db.from('agenda_bloqueios')
-      .select('id,data,horario,pacote_id,categoria,motivo')
-      .gte('data', hojeStr)
-      .lte('data', fimStr)
-      .then(function(r){ return r.data||[]; })
-      .catch(function(){ return []; })
-  ]);
-
-  _slots    = resultados[0];
-  _bloqueios = resultados[1];
-
+  _slots    = await getDisponibilidade(90, _catSel, _pacoteSel);
+  _bloqueios = [];
   hide('ag-cal-loading'); show('ag-cal-content');
   renderCal();
 };
