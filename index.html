@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendar Ensaio — Rodrigo Costa Fotografia</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ════════ RESET & BASE ════════ */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --primary:      #00d9ff;
+      --primary-dark: #0099cc;
+      --secondary:    #9d4edd;
+      --dark:         #0a0a0f;
+      --dark-light:   #12121a;
+      --darker:       #050509;
+      --light:        #f0f0f5;
+      --gray:         #8888a0;
+      --success:      #00cc88;
+      --warning:      #ffaa00;
+      --danger:       #ff3366;
+      --glass:        rgba(20,20,30,.75);
+      --glass-light:  rgba(30,30,45,.85);
+      --border:       rgba(100,100,150,.22);
+      --shadow:       0 8px 40px rgba(0,0,0,.4);
+    }
+
+    body {
+      background: radial-gradient(ellipse at top, #0d1017, var(--darker));
+      color: var(--light);
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ════════ HEADER ════════ */
+    .ag-header {
+      background: rgba(10,10,15,.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 20px;
+      text-align: center;
+      position: sticky; top:0; z-index:100;
+    }
+    .ag-brand {
+      font-size: 22px; font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ag-brand small { display:block; font-size:12px; font-weight:400; color:var(--gray); -webkit-text-fill-color:var(--gray); }
+
+    /* ════════ CONTAINER ════════ */
+    .ag-wrap {
+      max-width: 560px; margin: 0 auto;
+      padding: 30px 16px 60px;
+    }
+
+    /* ════════ GLASS CARD ════════ */
+    .ag-card {
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    /* ════════ STEPPER ════════ */
+    .ag-stepper {
+      display: flex; gap: 0; margin-bottom: 32px;
+      border-radius: 12px; overflow:hidden;
+      border: 1px solid var(--border);
+    }
+    .ag-step {
+      flex:1; padding: 10px 6px; text-align:center;
+      font-size: 11px; font-weight: 700; color: var(--gray);
+      background: rgba(10,10,15,.4);
+      border-right: 1px solid var(--border);
+      transition: all .3s;
+    }
+    .ag-step:last-child { border-right: none; }
+    .ag-step.active {
+      background: rgba(0,217,255,.12);
+      color: var(--primary);
+    }
+    .ag-step.done {
+      background: rgba(0,204,136,.1);
+      color: var(--success);
+    }
+    .ag-step i { display:block; font-size:14px; margin-bottom:2px; }
+
+    /* ════════ TIMER ════════ */
+    .ag-timer-bar {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+      background: rgba(0,0,0,.3); border-radius: 12px; padding: 12px 16px;
+      border: 1px solid var(--border);
+    }
+    .ag-timer-ring { position:relative; width:52px; height:52px; flex-shrink:0; }
+    .ag-timer-ring svg { transform:rotate(-90deg); }
+    .ag-timer-ring .r-bg  { fill:none; stroke:rgba(100,100,150,.2); stroke-width:5; }
+    .ag-timer-ring .r-arc { fill:none; stroke-width:5; stroke-linecap:round;
+      stroke-dasharray:145; stroke-dashoffset:0; transition:stroke-dashoffset .9s linear, stroke .5s; }
+    .ag-timer-num {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      font-size:12px; font-weight:800; font-variant-numeric:tabular-nums;
+      color:var(--primary);
+    }
+    .ag-timer-info { flex:1; }
+    .ag-timer-title { font-size:12px; color:var(--gray); }
+    .ag-timer-val   { font-size:22px; font-weight:800; color:var(--primary); font-variant-numeric:tabular-nums; }
+    .ag-progress { height:4px; border-radius:4px; background:rgba(100,100,150,.2); margin-top:6px; overflow:hidden; }
+    .ag-progress-fill { height:100%; border-radius:4px; transition:width 1s linear, background .5s;
+      background:linear-gradient(90deg,var(--primary),var(--success)); }
+
+    /* ════════ PACOTE CARDS ════════ */
+    .ag-pacotes-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .ag-pac-card {
+      border-radius: 14px; border: 2px solid var(--border);
+      background: rgba(10,10,15,.5); padding: 20px 14px;
+      cursor: pointer; text-align: center; transition: all .25s;
+    }
+    .ag-pac-card:hover  { border-color:var(--primary); background:rgba(0,217,255,.06); }
+    .ag-pac-card.chosen { border-color:var(--primary); background:rgba(0,217,255,.12); }
+    .ag-pac-icon { font-size:28px; color:var(--primary); margin-bottom:8px; }
+    .ag-pac-name { font-weight:700; font-size:14px; }
+
+    /* ════════ CALENDÁRIO ════════ */
+    .ag-cal-header {
+      display: flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+    }
+    .ag-cal-nav {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--gray); padding: 6px 12px; border-radius:8px; cursor:pointer; font-size:14px;
+    }
+    .ag-cal-nav:hover { border-color:var(--primary); color:var(--primary); }
+    .ag-cal-grid {
+      display: grid; grid-template-columns: repeat(7,1fr); gap: 4px;
+    }
+    .ag-cal-dow {
+      text-align:center; font-size:10px; font-weight:700; color:var(--gray);
+      padding: 4px 0;
+    }
+    .ag-cal-day {
+      aspect-ratio: 1; border-radius:8px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; font-size:13px; font-weight:600;
+      cursor:pointer; border: 1.5px solid transparent; transition: all .2s; position:relative;
+    }
+    .ag-cal-day.empty  { cursor:default; }
+    .ag-cal-day.past   { color:rgba(100,100,150,.4); cursor:not-allowed; }
+    .ag-cal-day.avail  { border-color:rgba(0,217,255,.35); background:rgba(0,217,255,.07); color:var(--primary); }
+    .ag-cal-day.avail:hover { background:rgba(0,217,255,.18); }
+    .ag-cal-day.chosen { background:var(--primary); color:var(--darker); font-weight:800; border-color:var(--primary); }
+    .ag-cal-day.today  { border-color:rgba(157,78,221,.5); }
+    .ag-cal-dot {
+      width:5px; height:5px; border-radius:50%; background:var(--success);
+      position:absolute; bottom:4px;
+    }
+
+    /* ════════ HORÁRIOS ════════ */
+    .ag-horarios-grid { display:flex; flex-wrap:wrap; gap:10px; }
+    .ag-hora {
+      padding:10px 18px; border-radius:10px; border:1.5px solid var(--border);
+      background:rgba(10,10,15,.5); color:var(--light); font-weight:700; font-size:14px;
+      cursor:pointer; transition:all .2s;
+    }
+    .ag-hora:hover  { border-color:var(--primary); color:var(--primary); }
+    .ag-hora.chosen { border-color:var(--primary); background:rgba(0,217,255,.15); color:var(--primary); }
+
+    /* ════════ FORM ════════ */
+    .ag-form-group { margin-bottom:16px; }
+    .ag-label {
+      display:block; margin-bottom:6px; font-weight:600; font-size:14px; color:var(--gray);
+    }
+    .ag-input {
+      width:100%; padding:12px 16px;
+      background: rgba(10,10,15,.6); border: 1px solid var(--border);
+      border-radius:10px; color:var(--light); font-size:15px; transition:.25s;
+    }
+    .ag-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(0,217,255,.1); }
+
+    /* ════════ BOTÕES ════════ */
+    .ag-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:13px 26px; border-radius:12px; font-weight:700; font-size:15px;
+      cursor:pointer; border:none; transition:all .25s; width:100%; justify-content:center;
+    }
+    .ag-btn-primary {
+      background: linear-gradient(135deg,var(--primary),var(--primary-dark));
+      color: var(--darker);
+    }
+    .ag-btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+    .ag-btn-primary:disabled { background:#334155; color:#64748b; cursor:not-allowed; transform:none; }
+    .ag-btn-ghost {
+      background:transparent; border:1px solid var(--border); color:var(--gray);
+    }
+    .ag-btn-ghost:hover { border-color:var(--primary); color:var(--primary); }
+
+    /* ════════ CONFIRMAÇÃO CARD ════════ */
+    .ag-confirm-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 0; border-bottom:1px solid rgba(100,100,150,.1);
+      font-size:14px;
+    }
+    .ag-confirm-row:last-child { border-bottom:none; }
+    .ag-confirm-label { color:var(--gray); font-size:12px; }
+    .ag-confirm-val   { font-weight:700; color:var(--light); }
+
+    /* ════════ SUCESSO ════════ */
+    .ag-success {
+      text-align:center; padding:40px 20px;
+      animation: agSlideUp .5s ease;
+    }
+    @keyframes agSlideUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .ag-success-icon {
+      font-size:64px; color:var(--success);
+      margin-bottom:16px; display:block;
+    }
+
+    /* ════════ ESTADOS DE ERRO ════════ */
+    .ag-error-screen {
+      text-align:center; padding:60px 20px;
+    }
+    .ag-error-icon { font-size:56px; color:var(--danger); margin-bottom:16px; }
+
+    /* ════════ LOADING ════════ */
+    .ag-loading {
+      display:flex; align-items:center; justify-content:center;
+      gap:12px; padding:40px; color:var(--gray); font-size:14px;
+    }
+
+    /* ════════ SECTION TITLES ════════ */
+    .ag-section-title {
+      font-size:18px; font-weight:800; margin-bottom:6px;
+      background:linear-gradient(135deg,var(--light),var(--gray));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .ag-section-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+  </style>
+</head>
+<body>
+
+  <!-- ════ HEADER ════ -->
+  <div class="ag-header">
+    <div class="ag-brand">
+      <i class="fas fa-camera" style="-webkit-text-fill-color:var(--primary);"></i>
+      Rodrigo Costa Fotografia
+      <small>Portal de Agendamento</small>
+    </div>
+  </div>
+
+  <!-- ════ CONTEÚDO PRINCIPAL ════ -->
+  <div class="ag-wrap">
+
+    <!-- Estado: carregando -->
+    <div id="ag-loading" class="ag-card ag-loading">
+      <i class="fas fa-spinner fa-spin fa-2x" style="color:var(--primary);"></i>
+      Validando link…
+    </div>
+
+    <!-- Estado: erro / expirado -->
+    <div id="ag-erro" class="ag-card ag-error-screen" style="display:none;">
+      <div class="ag-error-icon"><i class="fas fa-lock"></i></div>
+      <h2 id="ag-erro-titulo" style="margin-bottom:8px;font-size:22px;">Link inválido</h2>
+      <p id="ag-erro-msg" style="color:var(--gray);font-size:14px;max-width:340px;margin:0 auto;">
+        Este link não é válido ou já expirou.
+      </p>
+      <p style="margin-top:24px;font-size:13px;color:rgba(100,100,150,.6);">
+        Entre em contato com o fotógrafo para solicitar um novo link.
+      </p>
+    </div>
+
+    <!-- Estado: fluxo de agendamento -->
+    <div id="ag-app" style="display:none;">
+
+      <!-- Timer bar -->
+      <div class="ag-timer-bar" id="ag-timer-bar">
+        <div class="ag-timer-ring">
+          <svg viewBox="0 0 52 52" width="52" height="52">
+            <circle class="r-bg"  cx="26" cy="26" r="23"/>
+            <circle class="r-arc" id="ag-ring-arc" cx="26" cy="26" r="23"/>
+          </svg>
+          <div class="ag-timer-num" id="ag-timer-num">10:00</div>
+        </div>
+        <div class="ag-timer-info">
+          <div class="ag-timer-title"><i class="fas fa-clock"></i> Tempo restante para agendar</div>
+          <div class="ag-timer-val" id="ag-timer-big">10:00</div>
+          <div class="ag-progress">
+            <div class="ag-progress-fill" id="ag-prog-fill" style="width:100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stepper -->
+      <div class="ag-stepper">
+        <div class="ag-step active" id="step-ind-1">
+          <i class="fas fa-box"></i> Pacote
+        </div>
+        <div class="ag-step" id="step-ind-2">
+          <i class="fas fa-calendar"></i> Data
+        </div>
+        <div class="ag-step" id="step-ind-3">
+          <i class="fas fa-clock"></i> Horário
+        </div>
+        <div class="ag-step" id="step-ind-4">
+          <i class="fas fa-check"></i> Confirmar
+        </div>
+      </div>
+
+      <!-- ── STEP 1: Escolher Pacote ── -->
+      <div id="ag-step1" class="ag-card">
+        <div class="ag-section-title"><i class="fas fa-box" style="-webkit-text-fill-color:var(--primary);font-size:16px;"></i> Escolha o Pacote</div>
+        <div class="ag-section-sub">Selecione o tipo de ensaio que deseja agendar</div>
+        <div class="ag-pacotes-grid" id="ag-pacotes-grid">
+          <div class="ag-loading"><i class="fas fa-spinner fa-spin"></i> Carregando…</div>
+        </div>
+        <button class="ag-btn ag-btn-primary" style="margin-top:20px;" id="ag-btn-pac" onclick="agStep2()" disabled>
+          <i class="fas fa-arrow-right"></i> Escolher Data
+        </button>
+      </div>
+
+      <!-- ── STEP 2: Escolher Data ── -->
+      <div id="ag-step2" class="ag-card" style="display:none;">
+        <div class="ag-section-title"><i class="fas fa-calendar" style="-webkit-text-fill-color:var(--primary);font-size:16px;"></i> Escolha a Data</div>
+        <div class="ag-section-sub" id="ag-cal-sub">Datas disponíveis para o pacote selecionado</div>
+
+        <!-- Cabeçalho calendário -->
+        <div class="ag-cal-header">
+          <button class="ag-cal-nav" onclick="agCalNav(-1)"><i class="fas fa-chevron-left"></i></button>
+          <span id="ag-cal-mes" style="font-weight:700;font-size:15px;"></span>
+          <button class="ag-cal-nav" onclick="agCalNav(+1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <!-- Grid dos dias da semana -->
+        <div class="ag-cal-grid" style="margin-bottom:6px;">
+          <div class="ag-cal-dow">D</div><div class="ag-cal-dow">S</div>
+          <div class="ag-cal-dow">T</div><div class="ag-cal-dow">Q</div>
+          <div class="ag-cal-dow">Q</div><div class="ag-cal-dow">S</div>
+          <div class="ag-cal-dow">S</div>
+        </div>
+        <div class="ag-cal-grid" id="ag-cal-grid"></div>
+
+        <div id="ag-cal-empty" style="display:none;text-align:center;color:var(--gray);font-size:13px;padding:20px;">
+          <i class="fas fa-calendar-xmark" style="font-size:24px;margin-bottom:8px;display:block;"></i>
+          Nenhuma data disponível neste mês. Navegue para outro mês.
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button class="ag-btn ag-btn-ghost" style="width:auto;padding:12px 20px;" onclick="agVoltarStep1()">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </button>
+          <button class="ag-btn ag-btn-primary" id="ag-btn-data" onclick="agStep3()" disabled>
+            <i class="fas fa-clock"></i> Ver Horários
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Escolher Horário ── -->
+      <div id="ag-step3" class="ag-card" style="display:none;">
+        <div class="ag-section-title"><i class="fas fa-clock" style="-webkit-text-fill-color:var(--primary);font-size:16px;"></i> Escolha o Horário</div>
+        <div class="ag-section-sub" id="ag-hora-sub"></div>
+        <div class="ag-horarios-grid" id="ag-horarios-grid">
+          <div class="ag-loading"><i class="fas fa-spinner fa-spin"></i> Carregando…</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button class="ag-btn ag-btn-ghost" style="width:auto;padding:12px 20px;" onclick="agVoltarStep2()">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </button>
+          <button class="ag-btn ag-btn-primary" id="ag-btn-hora" onclick="agStep4()" disabled>
+            <i class="fas fa-user"></i> Seus Dados
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: Dados + Confirmação ── -->
+      <div id="ag-step4" class="ag-card" style="display:none;">
+        <div class="ag-section-title"><i class="fas fa-check-circle" style="-webkit-text-fill-color:var(--success);font-size:16px;"></i> Confirme o Agendamento</div>
+        <div class="ag-section-sub">Verifique os dados e confirme</div>
+
+        <!-- Resumo -->
+        <div style="background:rgba(0,0,0,.3);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid var(--border);">
+          <div class="ag-confirm-row">
+            <span class="ag-confirm-label"><i class="fas fa-box"></i> Pacote</span>
+            <span class="ag-confirm-val" id="conf-pacote">—</span>
+          </div>
+          <div class="ag-confirm-row">
+            <span class="ag-confirm-label"><i class="fas fa-calendar"></i> Data</span>
+            <span class="ag-confirm-val" id="conf-data">—</span>
+          </div>
+          <div class="ag-confirm-row">
+            <span class="ag-confirm-label"><i class="fas fa-clock"></i> Horário</span>
+            <span class="ag-confirm-val" id="conf-hora">—</span>
+          </div>
+        </div>
+
+        <!-- Dados do cliente -->
+        <div class="ag-form-group">
+          <label class="ag-label"><i class="fas fa-user"></i> Seu nome completo *</label>
+          <input type="text" id="ag-nome" class="ag-input" placeholder="Ex: Maria Silva">
+        </div>
+        <div class="ag-form-group">
+          <label class="ag-label"><i class="fab fa-whatsapp" style="color:#25D366;"></i> WhatsApp (com DDD) *</label>
+          <input type="tel" id="ag-wpp" class="ag-input" placeholder="(22) 99999-9999"
+            oninput="this.value=this.value.replace(/\D/g,'').replace(/^(\d{2})(\d{5})(\d{4})$/,'($1) $2-$3')">
+        </div>
+
+        <!-- Observação -->
+        <div class="ag-form-group">
+          <label class="ag-label"><i class="fas fa-comment"></i> Observação (opcional)</label>
+          <input type="text" id="ag-obs-cliente" class="ag-input" placeholder="Algum detalhe especial?">
+        </div>
+
+        <!-- Observação do admin (lida do token) -->
+        <div id="ag-obs-adm-wrap" style="display:none;background:rgba(157,78,221,.08);border:1px solid rgba(157,78,221,.25);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;">
+          <i class="fas fa-info-circle" style="color:var(--secondary);"></i>
+          <span id="ag-obs-adm" style="color:#ccc;"></span>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="ag-btn ag-btn-ghost" style="width:auto;padding:12px 20px;" onclick="agVoltarStep3()">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </button>
+          <button class="ag-btn ag-btn-primary" id="ag-btn-confirmar" onclick="agConfirmar()">
+            <i class="fas fa-calendar-check"></i> Confirmar Agendamento
+          </button>
+        </div>
+        <span id="ag-conf-msg" style="display:block;margin-top:12px;font-size:13px;color:var(--gray);"></span>
+      </div>
+
+    </div><!-- /ag-app -->
+
+    <!-- Estado: sucesso -->
+    <div id="ag-sucesso" class="ag-card" style="display:none;">
+      <div class="ag-success">
+        <span class="ag-success-icon"><i class="fas fa-circle-check"></i></span>
+        <h2 style="font-size:26px;font-weight:800;margin-bottom:8px;">Agendamento Confirmado!</h2>
+        <p style="color:var(--gray);font-size:14px;margin-bottom:24px;">
+          Sua reserva foi registrada com sucesso. Em breve entraremos em contato para confirmar os detalhes.
+        </p>
+        <div style="background:rgba(0,204,136,.08);border:1px solid rgba(0,204,136,.25);border-radius:14px;padding:20px;text-align:left;margin-bottom:20px;">
+          <div class="ag-confirm-row">
+            <span class="ag-confirm-label">Pacote</span>
+            <span class="ag-confirm-val" id="suc-pacote">—</span>
+          </div>
+          <div class="ag-confirm-row">
+            <span class="ag-confirm-label">Data</span>
+            <span class="ag-confirm-val" id="suc-data">—</span>
+          </div>
+          <div class="ag-confirm-row">
+            <span class="ag-confirm-label">Horário</span>
+            <span class="ag-confirm-val" id="suc-hora">—</span>
+          </div>
+          <div class="ag-confirm-row">
+            <span class="ag-confirm-label">Nome</span>
+            <span class="ag-confirm-val" id="suc-nome">—</span>
+          </div>
+        </div>
+        <p style="font-size:13px;color:rgba(100,100,150,.7);">
+          <i class="fab fa-whatsapp" style="color:#25D366;"></i>
+          Enviaremos a confirmação no WhatsApp cadastrado.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /ag-wrap -->
+
+
+  <script>
+  /* ═══════════════════════════════════════════════════════
+     PÁGINA PÚBLICA DE AGENDAMENTO — /agendamento?t=TOKEN
+  ═══════════════════════════════════════════════════════ */
+  (function() {
+
+    /* ── Config Supabase ── */
+    const SUPA_URL  = 'https://ledpqcynvqbdbccebhbo.supabase.co';
+    const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZHBxY3ludnFiZGJjY2ViaGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzODc3MjgsImV4cCI6MjA4NTk2MzcyOH0.s8GOzp4woujGuDc4vK9QXIf3cWLMENUnJfE4lt_YhLg';
+    const db = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    /* ── Mapeamento pacote → categoria do banco ── */
+    const PACOTE_MAP = {
+      'Infantil':       'Ensaio Infantil',
+      'Smash the Cake': 'Smash the Cake',
+      'Família':        'Ensaio Família',
+      'Kids':           'Ensaio Kids',
+      'Teen':           'Ensaio Teen',
+    };
+
+    const PACOTE_ICONS = {
+      'Infantil':       'fas fa-baby',
+      'Smash the Cake': 'fas fa-birthday-cake',
+      'Família':        'fas fa-people-group',
+      'Kids':           'fas fa-child',
+      'Teen':           'fas fa-person',
+    };
+
+    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const DIAS_EXT = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+
+    /* ── Estado ── */
+    let _linkData    = null;
+    let _pacoteSel   = null;
+    let _dataSel     = null;   // {iso, obj: Date}
+    let _horaSel     = null;   // "HH:MM"
+    let _datasDisp   = [];     // [{id, data, horario, vagas, vagas_ocupadas}]
+    let _calYear     = 0;
+    let _calMonth    = 0;
+    let _timerIntvl  = null;
+    let _expiresAt   = null;
+    let _token       = null;
+
+    /* ════════ ARRANQUE ════════ */
+    async function _init() {
+      const params = new URLSearchParams(window.location.search);
+      _token = params.get('t');
+
+      if (!_token) {
+        _mostrarErro('Link inválido', 'Nenhum token encontrado na URL.');
+        return;
+      }
+
+      try {
+        const { data, error } = await db
+          .from('agendamento_links')
+          .select('*')
+          .eq('token', _token)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          _mostrarErro('Link não encontrado', 'Este link não existe ou já foi removido.');
+          return;
+        }
+
+        // Verifica expiração
+        _expiresAt = new Date(data.expires_at);
+        if (data.status === 'expirado' || data.status === 'usado' || _expiresAt <= new Date()) {
+          const msg = data.status === 'usado'
+            ? 'Este link já foi utilizado para um agendamento.'
+            : 'Este link expirou. Solicite um novo link ao fotógrafo.';
+          _mostrarErro(
+            data.status === 'usado' ? '📌 Link já utilizado' : '⏰ Link expirado',
+            msg
+          );
+          // Marca como expirado se ainda não estava
+          if (data.status === 'ativo') {
+            await db.from('agendamento_links').update({ status:'expirado' }).eq('token', _token);
+          }
+          return;
+        }
+
+        _linkData = data;
+
+        // Inicia app
+        _show('ag-app');
+        _iniciarTimer();
+        _renderPacotes();
+
+        // Exibe observação do admin
+        if (data.observacao) {
+          const wrap = document.getElementById('ag-obs-adm-wrap');
+          const span = document.getElementById('ag-obs-adm');
+          if (wrap) wrap.style.display = 'block';
+          if (span) span.textContent = data.observacao;
+        }
+
+      } catch(e) {
+        _mostrarErro('Erro de conexão', 'Não foi possível validar o link: ' + e.message);
+      }
+    }
+
+    /* ════════ TIMER ════════ */
+    function _iniciarTimer() {
+      const TOTAL = 10 * 60 * 1000;
+      const CIRC  = 2 * Math.PI * 23; // ≈ 144.5
+
+      function _tick() {
+        const rem = _expiresAt - Date.now();
+        if (rem <= 0) {
+          clearInterval(_timerIntvl);
+          _mostrarErro('⏰ Link expirado', 'O tempo de agendamento acabou. Solicite um novo link.');
+          return;
+        }
+
+        const pct  = rem / TOTAL;
+        const mins = Math.floor(rem / 60000);
+        const secs = Math.floor((rem % 60000) / 1000);
+        const txt  = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+
+        let color = '#00cc88';
+        if (pct < 0.5) color = '#ffaa00';
+        if (pct < 0.2) color = '#ff3366';
+
+        const arc  = document.getElementById('ag-ring-arc');
+        const big  = document.getElementById('ag-timer-big');
+        const num  = document.getElementById('ag-timer-num');
+        const fill = document.getElementById('ag-prog-fill');
+
+        if (arc)  { arc.style.strokeDashoffset = CIRC * (1-pct); arc.style.stroke = color; }
+        if (big)  { big.textContent = txt; big.style.color = color; }
+        if (num)  { num.textContent = txt; num.style.color = color; }
+        if (fill) { fill.style.width = (pct*100)+'%'; fill.style.background = color; }
+      }
+
+      _tick();
+      _timerIntvl = setInterval(_tick, 1000);
+    }
+
+    /* ════════ STEP 1 — PACOTES ════════ */
+    function _renderPacotes() {
+      const pacotes = Array.isArray(_linkData.pacotes) ? _linkData.pacotes : [];
+      const grid = document.getElementById('ag-pacotes-grid');
+      if (!grid) return;
+
+      if (!pacotes.length) {
+        grid.innerHTML = '<p style="color:var(--gray);font-size:13px;">Nenhum pacote disponível neste link.</p>';
+        return;
+      }
+
+      grid.innerHTML = pacotes.map(p => `
+        <div class="ag-pac-card" id="ag-pac-${p.replace(/\s/g,'-')}" onclick="agSelecionarPacote('${p}')">
+          <div class="ag-pac-icon"><i class="${PACOTE_ICONS[p] || 'fas fa-camera'}"></i></div>
+          <div class="ag-pac-name">${p}</div>
+        </div>
+      `).join('');
+    }
+
+    window.agSelecionarPacote = function(nome) {
+      _pacoteSel = nome;
+      // Limpa seleção visual
+      document.querySelectorAll('.ag-pac-card').forEach(c => c.classList.remove('chosen'));
+      const card = document.getElementById('ag-pac-' + nome.replace(/\s/g,'-'));
+      if (card) card.classList.add('chosen');
+      // Habilita botão
+      const btn = document.getElementById('ag-btn-pac');
+      if (btn) btn.disabled = false;
+    };
+
+    /* ════════ STEP 2 — CALENDÁRIO ════════ */
+    window.agStep2 = async function() {
+      if (!_pacoteSel) return;
+      _setStep(2);
+
+      // Inicializa mês atual
+      const now = new Date();
+      _calYear  = now.getFullYear();
+      _calMonth = now.getMonth();
+
+      // Sub-label
+      const sub = document.getElementById('ag-cal-sub');
+      if (sub) sub.textContent = `Pacote: ${_pacoteSel}`;
+
+      // Carrega datas disponíveis para o pacote
+      await _carregarDatas();
+      _renderCal();
+    };
+
+    async function _carregarDatas() {
+      const cat = PACOTE_MAP[_pacoteSel] || _pacoteSel;
+      try {
+        const hoje = new Date().toISOString().split('T')[0];
+        const { data, error } = await db
+          .from('datas_disponiveis')
+          .select('id, data, horario, vagas, vagas_ocupadas, localizacao, categoria')
+          .gte('data', hoje)
+          .or(`categoria.eq.${cat},categoria.is.null`)
+          .order('data', { ascending:true });
+
+        if (error) throw error;
+
+        // Filtra vagas disponíveis
+        _datasDisp = (data || []).filter(d => (d.vagas || 1) > (d.vagas_ocupadas || 0));
+      } catch(e) {
+        _datasDisp = [];
+      }
+    }
+
+    function _renderCal() {
+      const grid    = document.getElementById('ag-cal-grid');
+      const mesEl   = document.getElementById('ag-cal-mes');
+      const emptyEl = document.getElementById('ag-cal-empty');
+      if (!grid) return;
+
+      if (mesEl) mesEl.textContent = `${MESES[_calMonth]} ${_calYear}`;
+
+      const primeiroDia = new Date(_calYear, _calMonth, 1).getDay();
+      const diasNoMes   = new Date(_calYear, _calMonth+1, 0).getDate();
+      const hoje        = new Date(); hoje.setHours(0,0,0,0);
+
+      // Datas disponíveis neste mês
+      const dispMes = _datasDisp.filter(d => {
+        const dt = _parseDate(d.data);
+        return dt.getFullYear() === _calYear && dt.getMonth() === _calMonth;
+      });
+
+      // Verifica se há alguma data disponível no mês
+      if (dispMes.length === 0) {
+        if (emptyEl) emptyEl.style.display = 'block';
+      } else {
+        if (emptyEl) emptyEl.style.display = 'none';
+      }
+
+      // Conjunto de dias com vaga
+      const diasComVaga = new Set(dispMes.map(d => _parseDate(d.data).getDate()));
+
+      let html = '';
+
+      // Células vazias
+      for (let i = 0; i < primeiroDia; i++) {
+        html += '<div class="ag-cal-day empty"></div>';
+      }
+
+      for (let dia = 1; dia <= diasNoMes; dia++) {
+        const dt     = new Date(_calYear, _calMonth, dia);
+        const isPast = dt < hoje;
+        const hasVaga = diasComVaga.has(dia);
+        const iso    = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+        const isToday = dt.getTime() === hoje.getTime();
+        const isSel  = _dataSel && _dataSel.iso === iso;
+
+        let cls = 'ag-cal-day';
+        if (isPast)  cls += ' past';
+        else if (hasVaga) cls += ' avail';
+        if (isToday) cls += ' today';
+        if (isSel)   cls += ' chosen';
+
+        const dot = hasVaga && !isPast ? '<div class="ag-cal-dot"></div>' : '';
+
+        if (hasVaga && !isPast) {
+          html += `<div class="${cls}" onclick="agSelecionarData('${iso}')">${dia}${dot}</div>`;
+        } else {
+          html += `<div class="${cls}">${dia}</div>`;
+        }
+      }
+
+      grid.innerHTML = html;
+    }
+
+    window.agCalNav = function(dir) {
+      _calMonth += dir;
+      if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
+      if (_calMonth > 11) { _calMonth = 0;  _calYear++; }
+      _renderCal();
+    };
+
+    window.agSelecionarData = function(iso) {
+      _dataSel = { iso, obj: _parseDate(iso) };
+      _horaSel = null;
+      // Botão data
+      const btn = document.getElementById('ag-btn-data');
+      if (btn) btn.disabled = false;
+      _renderCal();
+    };
+
+    /* ════════ STEP 3 — HORÁRIOS ════════ */
+    window.agStep3 = function() {
+      if (!_dataSel) return;
+      _setStep(3);
+
+      const sub = document.getElementById('ag-hora-sub');
+      if (sub) {
+        const dtStr = _dataSel.obj.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+        sub.textContent = dtStr.charAt(0).toUpperCase() + dtStr.slice(1);
+      }
+
+      // Horários disponíveis para a data e pacote selecionados
+      const cat = PACOTE_MAP[_pacoteSel] || _pacoteSel;
+      const horasDisp = _datasDisp.filter(d => {
+        const dt = _parseDate(d.data);
+        return dt.getFullYear() === _dataSel.obj.getFullYear()
+            && dt.getMonth()     === _dataSel.obj.getMonth()
+            && dt.getDate()      === _dataSel.obj.getDate();
+      });
+
+      const grid = document.getElementById('ag-horarios-grid');
+      if (!horasDisp.length) {
+        grid.innerHTML = '<p style="color:var(--gray);font-size:13px;">Nenhum horário disponível para esta data.</p>';
+        return;
+      }
+
+      grid.innerHTML = horasDisp.map(h => {
+        const hora = (h.horario || '00:00').substring(0,5);
+        const isSel = _horaSel === hora;
+        return `<div class="ag-hora${isSel?' chosen':''}" onclick="agSelecionarHora('${hora}','${h.id}')">${hora}</div>`;
+      }).join('');
+    };
+
+    window.agSelecionarHora = function(hora, dataId) {
+      _horaSel = hora;
+      _dataId  = dataId; // ID da data para incrementar vagas_ocupadas
+      document.querySelectorAll('.ag-hora').forEach(el => el.classList.remove('chosen'));
+      event.target.classList.add('chosen');
+      const btn = document.getElementById('ag-btn-hora');
+      if (btn) btn.disabled = false;
+    };
+
+    /* ════════ STEP 4 — CONFIRMAR ════════ */
+    window.agStep4 = function() {
+      if (!_horaSel) return;
+      _setStep(4);
+
+      // Preenche resumo
+      const dtStr = _dataSel.obj.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+      _setTxt('conf-pacote', _pacoteSel);
+      _setTxt('conf-data',   dtStr.charAt(0).toUpperCase() + dtStr.slice(1));
+      _setTxt('conf-hora',   _horaSel);
+    };
+
+    window.agConfirmar = async function() {
+      const nome = (document.getElementById('ag-nome')?.value || '').trim();
+      const wpp  = (document.getElementById('ag-wpp')?.value  || '').trim();
+      const obsC = (document.getElementById('ag-obs-cliente')?.value || '').trim();
+      const msg  = document.getElementById('ag-conf-msg');
+
+      if (!nome) { _setTxt('ag-conf-msg', '⚠️ Informe seu nome completo.'); return; }
+      if (!wpp || wpp.replace(/\D/g,'').length < 10) {
+        _setTxt('ag-conf-msg', '⚠️ Informe um WhatsApp válido com DDD.');
+        return;
+      }
+
+      const btn = document.getElementById('ag-btn-confirmar');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando…'; }
+      _setTxt('ag-conf-msg', '');
+
+      try {
+        // 1. Salva agendamento
+        const { error: errAg } = await db.from('agendamentos_clientes').insert({
+          lead_id:          _linkData.lead_id || null,
+          nome:             nome,
+          whatsapp:         wpp.replace(/\D/g,''),
+          pacote:           _pacoteSel,
+          produto_nome:     _pacoteSel,
+          produto_categoria: PACOTE_MAP[_pacoteSel] || _pacoteSel,
+          data:             _dataSel.iso,
+          horario:          _horaSel + ':00',
+          status:           'aguardando_comprovante',
+          observacoes_adm:  (obsC || '') + (_linkData.observacao ? ' | Admin: ' + _linkData.observacao : ''),
+          link_token:       _token,
+        });
+
+        if (errAg) throw errAg;
+
+        // 2. Marca token como usado
+        await db.from('agendamento_links')
+          .update({ status: 'usado' })
+          .eq('token', _token);
+
+        // 3. Incrementa vagas_ocupadas (se tiver ID da data)
+        if (_dataId) {
+          const { data: ddRow } = await db.from('datas_disponiveis').select('vagas_ocupadas').eq('id', _dataId).single();
+          if (ddRow) {
+            await db.from('datas_disponiveis').update({ vagas_ocupadas: (ddRow.vagas_ocupadas||0)+1 }).eq('id', _dataId);
+          }
+        }
+
+        // 4. Para timer
+        if (_timerIntvl) clearInterval(_timerIntvl);
+
+        // 5. Tela de sucesso
+        _setTxt('suc-pacote', _pacoteSel);
+        const dtStr = _dataSel.obj.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+        _setTxt('suc-data', dtStr.charAt(0).toUpperCase() + dtStr.slice(1));
+        _setTxt('suc-hora', _horaSel);
+        _setTxt('suc-nome', nome);
+
+        _hideAll();
+        _show('ag-sucesso');
+
+      } catch(e) {
+        _setTxt('ag-conf-msg', '❌ Erro ao confirmar: ' + e.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-calendar-check"></i> Confirmar Agendamento'; }
+      }
+    };
+
+    /* ════════ NAVEGAÇÃO ════════ */
+    window.agVoltarStep1 = function() { _setStep(1); };
+    window.agVoltarStep2 = function() { _setStep(2); agStep2(); };
+    window.agVoltarStep3 = function() { _setStep(3); agStep3(); };
+
+    function _setStep(n) {
+      [1,2,3,4].forEach(i => {
+        const el = document.getElementById('ag-step' + i);
+        if (el) el.style.display = i === n ? 'block' : 'none';
+        const ind = document.getElementById('step-ind-' + i);
+        if (ind) {
+          ind.classList.remove('active','done');
+          if (i === n) ind.classList.add('active');
+          else if (i < n) ind.classList.add('done');
+        }
+      });
+    }
+
+    /* ════════ HELPERS ════════ */
+    function _show(id)    { const el=document.getElementById(id); if(el) el.style.display='block'; }
+    function _hideAll()   { ['ag-loading','ag-erro','ag-app','ag-sucesso'].forEach(id => { const e=document.getElementById(id); if(e) e.style.display='none'; }); }
+    function _setTxt(id, txt) { const el=document.getElementById(id); if(el) el.textContent=txt; }
+
+    function _mostrarErro(titulo, msg) {
+      _hideAll();
+      _show('ag-erro');
+      const t=document.getElementById('ag-erro-titulo'); if(t) t.textContent=titulo;
+      const m=document.getElementById('ag-erro-msg');    if(m) m.textContent=msg;
+    }
+
+    function _parseDate(isoStr) {
+      const [y,m,d] = isoStr.split('-').map(Number);
+      return new Date(y, m-1, d);
+    }
+
+    let _dataId = null; // armazenado ao selecionar horário
+
+    /* ════════ INICIALIZA ════════ */
+    _show('ag-loading');
+    _init();
+
+  })();
+  </script>
+</body>
+</html>
