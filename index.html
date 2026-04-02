@@ -532,7 +532,9 @@ var _token     = null;
 var _linkData  = null;
 var _pacoteSel = null;   // nome amigável
 var _catSel    = null;   // categoria do banco
+var _pacoteId  = null;   // id do pacote no banco (para filtro de bloqueios)
 var _slots     = [];     // todos os slots gerados pelas regras
+var _bloqueios = [];     // bloqueios carregados do Supabase (agenda_bloqueios)
 var _dataSel   = null;   // 'YYYY-MM-DD'
 var _horaSel   = null;   // 'HH:MM'
 var _calYear   = 0;
@@ -635,19 +637,24 @@ function renderPacotes(){
     grid.innerHTML='<p style="color:var(--muted);font-size:13px;">Nenhum pacote disponível neste link.</p>';
     return;
   }
+  /* Suporta pacotes como array de strings ou array de objetos {id, nome} */
   grid.innerHTML = pacotes.map(function(p){
-    var icon = PACOTE_ICONS[p]||PACOTE_ICONS[PACOTE_MAP[p]]||'fas fa-camera';
-    return '<div class="ag-pac-card" id="pac-'+p.replace(/[^a-z0-9]/gi,'_')+'" onclick="selecionarPacote(\''+p+'\')">'
+    var nome   = (typeof p==='object'&&p!==null) ? (p.nome||p.name||String(p)) : String(p);
+    var pid    = (typeof p==='object'&&p!==null) ? (p.id||null) : null;
+    var icon   = PACOTE_ICONS[nome]||PACOTE_ICONS[PACOTE_MAP[nome]]||'fas fa-camera';
+    var pidArg = pid ? "'"+pid+"'" : 'null';
+    return '<div class="ag-pac-card" id="pac-'+nome.replace(/[^a-z0-9]/gi,'_')+'" onclick="selecionarPacote(\''+nome+'\','+pidArg+')">'
       +'<div class="ag-pac-icon"><i class="'+icon+'"></i></div>'
-      +'<div class="ag-pac-name">'+p+'</div>'
+      +'<div class="ag-pac-name">'+nome+'</div>'
       +'<div class="ag-pac-check"><i class="fas fa-check"></i></div>'
       +'</div>';
   }).join('');
 }
 
-window.selecionarPacote = function(nome){
+window.selecionarPacote = function(nome, pacoteId){
   _pacoteSel = nome;
   _catSel    = PACOTE_MAP[nome]||nome;
+  _pacoteId  = pacoteId||null;
   document.querySelectorAll('.ag-pac-card').forEach(function(c){c.classList.remove('chosen');});
   var card = ge('pac-'+nome.replace(/[^a-z0-9]/gi,'_'));
   if(card) card.classList.add('chosen');
@@ -661,7 +668,26 @@ window.goStep2 = async function(){
   var now=new Date(); _calYear=now.getFullYear(); _calMonth=now.getMonth();
 
   hide('ag-cal-content'); show('ag-cal-loading');
-  _slots = await getDisponibilidade(90, _catSel);
+
+  /* Busca slots de disponibilidade E bloqueios em paralelo */
+  var hoje    = new Date();
+  var hojeStr = dateStr(hoje);
+  var fimDate = new Date(hoje); fimDate.setDate(fimDate.getDate()+90);
+  var fimStr  = dateStr(fimDate);
+
+  var resultados = await Promise.all([
+    getDisponibilidade(90, _catSel),
+    db.from('agenda_bloqueios')
+      .select('id,data,horario,pacote_id,categoria,motivo')
+      .gte('data', hojeStr)
+      .lte('data', fimStr)
+      .then(function(r){ return r.data||[]; })
+      .catch(function(){ return []; })
+  ]);
+
+  _slots    = resultados[0];
+  _bloqueios = resultados[1];
+
   hide('ag-cal-loading'); show('ag-cal-content');
   renderCal();
 };
@@ -834,11 +860,74 @@ window.selecionarData = function(iso){
   renderHorarios(iso);
 };
 
+/* ══ FILTRO DE HORÁRIOS POR BLOQUEIO (prioridade: pacote_id > categoria > global) ══ */
+/**
+ * filtrarHorariosDisponiveis
+ * @param {Object} opts
+ * @param {Array}  opts.horarios  - lista de slots { data, horario, ... }
+ * @param {Array}  opts.bloqueios - registros de agenda_bloqueios
+ * @param {string} opts.data      - 'YYYY-MM-DD'
+ * @param {*}      opts.pacoteId  - id do pacote selecionado (ou null)
+ * @param {string} opts.categoria - categoria do pacote selecionado
+ * @returns {Array} horários não bloqueados
+ */
+function filtrarHorariosDisponiveis(opts){
+  var horarios  = opts.horarios  || [];
+  var bloqueios = opts.bloqueios || [];
+  var data      = opts.data;
+  var pacoteId  = opts.pacoteId;
+  var categoria = opts.categoria;
+
+  /* Pré-filtra bloqueios apenas desta data para eficiência */
+  var bloqDia = bloqueios.filter(function(b){
+    return b.data === data;
+  });
+
+  return horarios.filter(function(slot){
+    var hs = String(slot.horario).substring(0,5);
+
+    /* Verifica cada bloqueio do dia para este horário */
+    var bloqueado = bloqDia.some(function(b){
+      var bh = b.horario ? String(b.horario).substring(0,5) : null;
+      /* Bloqueio não se aplica a este horário específico */
+      if(bh && bh !== hs) return false;
+
+      /* ── REGRA 1: bloqueio com pacote_id — afeta SOMENTE aquele pacote ── */
+      if(b.pacote_id){
+        return String(b.pacote_id) === String(pacoteId);
+      }
+
+      /* ── REGRA 2: bloqueio com categoria (sem pacote_id) ── */
+      if(b.categoria){
+        var bc = normStr(b.categoria);
+        var cc = normStr(categoria);
+        return bc && cc && (bc === cc || cc.includes(bc) || bc.includes(cc));
+      }
+
+      /* ── REGRA 3: bloqueio global (sem pacote_id e sem categoria) ── */
+      return true;
+    });
+
+    return !bloqueado;
+  });
+}
+
 function renderHorarios(iso){
   var panel=ge('ag-times-panel'); var chips=ge('ag-times-chips');
   if(!panel||!chips) return;
 
-  var horasDisp=_slots.filter(function(s){return s.data===iso;});
+  /* Slots do dia filtrados pelas regras base */
+  var horasDia = _slots.filter(function(s){ return s.data===iso; });
+
+  /* Aplica filtro de bloqueios com prioridade pacote_id > categoria > global */
+  var horasDisp = filtrarHorariosDisponiveis({
+    horarios:  horasDia,
+    bloqueios: _bloqueios,
+    data:      iso,
+    pacoteId:  _pacoteId,
+    categoria: _catSel
+  });
+
   horasDisp.sort(function(a,b){return a.horario.localeCompare(b.horario);});
 
   if(!horasDisp.length){ panel.classList.remove('show'); return; }
