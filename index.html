@@ -800,18 +800,40 @@ function renderCal(){
   var primeiroDia=new Date(_calYear,_calMonth,1).getDay();
   var diasNoMes=new Date(_calYear,_calMonth+1,0).getDate();
 
-  /* Dias com slot disponível neste mês */
-  var dispMes=_slots.filter(function(s){
+  /* Dias do mês com slots na base (pré-filtro rápido) */
+  var slotsMes=_slots.filter(function(s){
     var dt=parseDate(s.data);
     return dt.getFullYear()===_calYear&&dt.getMonth()===_calMonth;
   });
-  var diasComSlot=new Set(dispMes.map(function(s){return parseDate(s.data).getDate();}));
 
-  if(dispMes.length===0){
+  /* Aplica filtro de bloqueios para cada dia do mês — constrói Set de dias realmente disponíveis */
+  var diasDisponiveis=new Set();
+  var totalHorariosDisponiveis=0;
+  slotsMes.forEach(function(s){
+    /* Evita recalcular o mesmo dia várias vezes */
+    if(diasDisponiveis.has(s.data)) return;
+    var dt2=parseDate(s.data);
+    if(dt2<hoje) return;
+    if(diaTemHorarioDisponivel(s.data)){
+      diasDisponiveis.add(s.data);
+    }
+  });
+  /* Conta total de horários disponíveis no mês (para o label) */
+  diasDisponiveis.forEach(function(iso){
+    var horasDia=_slots.filter(function(s){return s.data===iso;});
+    totalHorariosDisponiveis+=filtrarHorariosDisponiveis({
+      horarios:horasDia,bloqueios:_bloqueios,data:iso,
+      pacoteId:_pacoteId,pacoteNome:_pacoteSel,categoria:_catSel
+    }).length;
+  });
+
+  var diasComSlot=new Set(Array.from(diasDisponiveis).map(function(iso){return parseDate(iso).getDate();}));
+
+  if(diasDisponiveis.size===0){
     emptyEl.style.display='block'; countEl.style.display='none';
   } else {
     emptyEl.style.display='none'; countEl.style.display='flex';
-    txt('ag-cal-count-txt', dispMes.length+' horário'+(dispMes.length!==1?'s':'')+(diasComSlot.size>1?' em '+diasComSlot.size+' dias':'')+' disponíve'+(dispMes.length!==1?'is':'l')+' neste mês');
+    txt('ag-cal-count-txt', totalHorariosDisponiveis+' horário'+(totalHorariosDisponiveis!==1?'s':'')+(diasDisponiveis.size>1?' em '+diasDisponiveis.size+' dias':'')+' disponíve'+(totalHorariosDisponiveis!==1?'is':'l')+' neste mês');
   }
 
   var html='';
@@ -862,54 +884,91 @@ window.selecionarData = function(iso){
 
 /* ══ FILTRO DE HORÁRIOS POR BLOQUEIO (prioridade: pacote_id > categoria > global) ══ */
 /**
+ * bloqueioAfetaPacote
+ * Decide se um registro de bloqueio afeta o pacote atualmente selecionado.
+ *
+ * Prioridade:
+ *  1. pacote_id preenchido → compara com _pacoteId (id numérico) OU com o
+ *     nome/categoria do pacote (fallback para quando o admin usa nome em vez de id)
+ *  2. Só categoria preenchida → compara com _catSel
+ *  3. Nenhum dos dois → bloqueio global, afeta todos
+ */
+function bloqueioAfetaPacote(b, pacoteId, pacoteNome, categoria){
+  if(b.pacote_id !== null && b.pacote_id !== undefined && b.pacote_id !== ''){
+    /* Tenta match por id numérico */
+    if(pacoteId !== null && pacoteId !== undefined){
+      return String(b.pacote_id) === String(pacoteId);
+    }
+    /* Fallback: admin pode ter armazenado o nome do pacote no campo pacote_id
+       ou pode existir um campo pacote_nome junto — tenta por nome/categoria */
+    var bn = normStr(String(b.pacote_id));
+    var pn = normStr(pacoteNome||'');
+    var pc = normStr(categoria||'');
+    if(bn && (bn === pn || bn === pc || pn.includes(bn) || pc.includes(bn))) return true;
+    /* Se temos pacote_id mas não conseguimos resolver, NÃO bloqueamos
+       (regra: pacote_id afeta SOMENTE aquele pacote — não vazar para outros) */
+    return false;
+  }
+
+  if(b.categoria !== null && b.categoria !== undefined && b.categoria !== ''){
+    var bc = normStr(b.categoria);
+    var cc = normStr(categoria||'');
+    return bc && cc && (bc === cc || cc.includes(bc) || bc.includes(cc));
+  }
+
+  /* Bloqueio global */
+  return true;
+}
+
+/**
  * filtrarHorariosDisponiveis
- * @param {Object} opts
- * @param {Array}  opts.horarios  - lista de slots { data, horario, ... }
- * @param {Array}  opts.bloqueios - registros de agenda_bloqueios
- * @param {string} opts.data      - 'YYYY-MM-DD'
- * @param {*}      opts.pacoteId  - id do pacote selecionado (ou null)
- * @param {string} opts.categoria - categoria do pacote selecionado
- * @returns {Array} horários não bloqueados
+ * Recebe a lista de slots do dia e retorna apenas os não bloqueados,
+ * respeitando a prioridade: pacote_id > categoria > global.
  */
 function filtrarHorariosDisponiveis(opts){
   var horarios  = opts.horarios  || [];
   var bloqueios = opts.bloqueios || [];
   var data      = opts.data;
   var pacoteId  = opts.pacoteId;
+  var pacoteNome= opts.pacoteNome;
   var categoria = opts.categoria;
 
-  /* Pré-filtra bloqueios apenas desta data para eficiência */
-  var bloqDia = bloqueios.filter(function(b){
-    return b.data === data;
-  });
+  /* Pré-filtra bloqueios desta data */
+  var bloqDia = bloqueios.filter(function(b){ return b.data === data; });
 
   return horarios.filter(function(slot){
     var hs = String(slot.horario).substring(0,5);
 
-    /* Verifica cada bloqueio do dia para este horário */
     var bloqueado = bloqDia.some(function(b){
-      var bh = b.horario ? String(b.horario).substring(0,5) : null;
-      /* Bloqueio não se aplica a este horário específico */
+      /* Verifica se o horário do bloqueio bate com este slot
+         (bloqueio sem horario = bloqueia o dia inteiro) */
+      var bh = (b.horario && b.horario !== '') ? String(b.horario).substring(0,5) : null;
       if(bh && bh !== hs) return false;
 
-      /* ── REGRA 1: bloqueio com pacote_id — afeta SOMENTE aquele pacote ── */
-      if(b.pacote_id){
-        return String(b.pacote_id) === String(pacoteId);
-      }
-
-      /* ── REGRA 2: bloqueio com categoria (sem pacote_id) ── */
-      if(b.categoria){
-        var bc = normStr(b.categoria);
-        var cc = normStr(categoria);
-        return bc && cc && (bc === cc || cc.includes(bc) || bc.includes(cc));
-      }
-
-      /* ── REGRA 3: bloqueio global (sem pacote_id e sem categoria) ── */
-      return true;
+      return bloqueioAfetaPacote(b, pacoteId, pacoteNome, categoria);
     });
 
     return !bloqueado;
   });
+}
+
+/**
+ * diaTemHorarioDisponivel
+ * Usado pelo renderCal para saber se um dia deve aparecer clicável.
+ * Aplica os mesmos filtros de bloqueio que renderHorarios.
+ */
+function diaTemHorarioDisponivel(iso){
+  var horasDia = _slots.filter(function(s){ return s.data === iso; });
+  if(!horasDia.length) return false;
+  var livres = filtrarHorariosDisponiveis({
+    horarios:   horasDia,
+    bloqueios:  _bloqueios,
+    data:       iso,
+    pacoteId:   _pacoteId,
+    pacoteNome: _pacoteSel,
+    categoria:  _catSel
+  });
+  return livres.length > 0;
 }
 
 function renderHorarios(iso){
@@ -921,11 +980,12 @@ function renderHorarios(iso){
 
   /* Aplica filtro de bloqueios com prioridade pacote_id > categoria > global */
   var horasDisp = filtrarHorariosDisponiveis({
-    horarios:  horasDia,
-    bloqueios: _bloqueios,
-    data:      iso,
-    pacoteId:  _pacoteId,
-    categoria: _catSel
+    horarios:   horasDia,
+    bloqueios:  _bloqueios,
+    data:       iso,
+    pacoteId:   _pacoteId,
+    pacoteNome: _pacoteSel,
+    categoria:  _catSel
   });
 
   horasDisp.sort(function(a,b){return a.horario.localeCompare(b.horario);});
