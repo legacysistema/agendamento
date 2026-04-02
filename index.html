@@ -799,7 +799,7 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
     bookedSet[a.data+'_'+(a.horario||'').substring(0,5)]=true;
   });
 
-  function isBloqRec(dataStr,horario){
+  function isBloqRec(dataStr, horario){
     var parts=dataStr.split('-').map(Number);
     var dt=new Date(parts[0],parts[1]-1,parts[2]);
     var diaSem=dt.getDay();
@@ -814,40 +814,35 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
       var horMatches=hbs.length===0||hbs.some(function(h){return String(h).substring(0,5)===String(horario).substring(0,5);});
       if(!horMatches) continue;
 
-      /* ── PRIORIDADE 1: bloqueio tem pacote_id numérico ──
-         Compara com _pacoteId. Se não bater, ignora (não vaza para a categoria). */
+      /* ── PRIORIDADE 1: pacote_id numérico ── */
       if(b.pacote_id !== null && b.pacote_id !== undefined && b.pacote_id !== ''){
-        /* Match por id numérico */
         if(_pacoteId !== null && _pacoteId !== undefined){
           if(String(b.pacote_id) === String(_pacoteId)) return true;
-          continue; /* pacote_id existe mas não é o nosso */
+          continue; /* este bloqueio é de outro pacote, não afeta */
         }
-        /* Sem _pacoteId: fallback por nome */
-        var bni = normStr(String(b.pacote_id));
-        var pni = normStr(pacoteNome||'');
-        var pci = normStr(categoria||'');
-        if(bni && (bni===pni || pni.includes(bni) || bni.includes(pni) || bni===pci || pci.includes(bni) || bni.includes(pci))) return true;
+        /* sem _pacoteId disponível: fallback por nome */
+        var bni=normStr(String(b.pacote_id));
+        var pni=normStr(pacoteNome||''); var pci=normStr(categoria||'');
+        if(bni&&(bni===pni||pni.includes(bni)||bni.includes(pni)||bni===pci||pci.includes(bni)||bni.includes(pci))) return true;
         continue;
       }
 
-      /* ── PRIORIDADE 1b: bloqueio tem pacote_nome ou pacote (texto) ──
-         Afeta SOMENTE aquele pacote. Se não bater com o pacote selecionado, ignora. */
-      var temPacoteEspec = (b.pacote_nome&&b.pacote_nome.trim()!=='') || (b.pacote&&b.pacote.trim()!=='');
-      if(temPacoteEspec){
-        var bn = normStr(b.pacote_nome||b.pacote||'');
-        var pn = normStr(pacoteNome||'');
-        var pc = normStr(categoria||'');
-        if(bn && (bn===pn || pn.includes(bn) || bn.includes(pn) || bn===pc || pc.includes(bn) || bn.includes(pc))) return true;
-        continue; /* pacote específico mas não é o nosso — ignora */
+      /* ── PRIORIDADE 1b: pacote_nome / pacote (texto) ── */
+      var temPacNome=(b.pacote_nome&&b.pacote_nome.trim()!=='') || (b.pacote&&b.pacote.trim()!=='');
+      if(temPacNome){
+        var bn=normStr(b.pacote_nome||b.pacote||'');
+        var pn=normStr(pacoteNome||''); var pc=normStr(categoria||'');
+        if(bn&&(bn===pn||pn.includes(bn)||bn.includes(pn)||bn===pc||pc.includes(bn)||bn.includes(pc))) return true;
+        continue; /* bloqueio específico de outro pacote */
       }
 
-      /* ── PRIORIDADE 2: bloqueio tem categoria (sem pacote específico) ── */
+      /* ── PRIORIDADE 2: categoria ── */
       if(b.categoria&&b.categoria.trim()!==''){
         var bcat=normStr(b.categoria); var ccat=normStr(categoria||'');
         if(bcat&&ccat&&bcat!==ccat&&!ccat.includes(bcat)&&!bcat.includes(ccat)) continue;
       }
 
-      /* ── PRIORIDADE 3: bloqueio global (sem pacote e sem categoria) ── */
+      /* ── PRIORIDADE 3: global ── */
       return true;
     }
     return false;
@@ -858,26 +853,30 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
      os dias permitidos = todos os dias (0-6) menos os dias bloqueados.
      Isso permite que o admin defina disponibilidade por pacote via bloqueio. */
   function getDiasLivresPorPacote(dataStr){
-    if(!pacoteNome) return null; // sem pacote específico, usa regra normal
-    var pn = normStr(pacoteNome);
-    // Busca bloqueios recorrentes que se aplicam a este pacote
+    if(!pacoteNome && !_pacoteId) return null;
+    var pn = normStr(pacoteNome||'');
     var bloqPacote = rBloqRec.filter(function(b){
       if(!b.ativo) return false;
       if(b.data_inicio && dataStr < b.data_inicio) return false;
       if(b.data_fim && dataStr > b.data_fim) return false;
+      /* Match por pacote_id numérico (fonte principal) */
+      if(b.pacote_id !== null && b.pacote_id !== undefined && b.pacote_id !== ''){
+        if(_pacoteId !== null && _pacoteId !== undefined){
+          return String(b.pacote_id) === String(_pacoteId);
+        }
+      }
+      /* Match por pacote_nome / pacote (texto) */
       var temPac = (b.pacote_nome&&b.pacote_nome.trim()!=='') || (b.pacote&&b.pacote.trim()!=='');
       if(!temPac) return false;
       var bn = normStr(b.pacote_nome||b.pacote||'');
       return bn === pn || pn.includes(bn) || bn.includes(pn);
     });
-    if(!bloqPacote.length) return null; // sem bloqueio de pacote, usa regra normal
-    // Coleta todos os dias bloqueados para este pacote
+    if(!bloqPacote.length) return null;
     var diasBloq = new Set();
     bloqPacote.forEach(function(b){
       var dias; try{dias=Array.isArray(b.dias_semana)?b.dias_semana:JSON.parse(b.dias_semana||'[]');}catch(_){dias=[];}
       dias.map(Number).forEach(function(d){ diasBloq.add(d); });
     });
-    // Dias livres = 0..6 menos os bloqueados
     var diasLivres = [0,1,2,3,4,5,6].filter(function(d){ return !diasBloq.has(d); });
     return diasLivres;
   }
