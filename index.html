@@ -874,8 +874,21 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
       return bn === pn || pn.includes(bn) || bn.includes(pn);
     });
     if(!bloqPacote.length) return null;
+
+    /* Só bloqueios SEM horários específicos bloqueiam o dia inteiro.
+       Bloqueios com horarios_bloqueados preenchidos são parciais —
+       bloqueiam apenas aqueles horários via isBloqRec, não o dia todo. */
+    var bloqDiaInteiro = bloqPacote.filter(function(b){
+      var hbs; try{ hbs = Array.isArray(b.horarios_bloqueados) ? b.horarios_bloqueados : JSON.parse(b.horarios_bloqueados||'[]'); } catch(_){ hbs=[]; }
+      return hbs.length === 0;
+    });
+
+    /* Se todos os bloqueios deste pacote são parciais (têm horários),
+       não há bloqueio de dia inteiro — retorna null para não excluir nenhum dia */
+    if(!bloqDiaInteiro.length) return null;
+
     var diasBloq = new Set();
-    bloqPacote.forEach(function(b){
+    bloqDiaInteiro.forEach(function(b){
       var dias; try{dias=Array.isArray(b.dias_semana)?b.dias_semana:JSON.parse(b.dias_semana||'[]');}catch(_){dias=[];}
       dias.map(Number).forEach(function(d){ diasBloq.add(d); });
     });
