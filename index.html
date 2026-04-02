@@ -422,7 +422,8 @@ body::after{
       <!-- LOADING -->
       <div id="ag-loading" class="ag-loading-screen">
         <div class="ag-loading-spin"></div>
-        <div class="ag-loading-text">Validando link…</div>
+        <div class="ag-loading-text" id="ag-loading-text">Validando link…</div>
+        <div id="ag-loading-detail" style="font-size:11px;color:rgba(110,110,138,0.5);margin-top:8px;font-family:var(--font-ui);max-width:280px;line-height:1.5;text-align:center;"></div>
       </div>
 
       <!-- ERRO -->
@@ -786,27 +787,54 @@ function normStr(s){
 
 /* ══ INIT ══ */
 async function _init(){
+  function setDetalhe(msg){ var el=ge('ag-loading-detail'); if(el) el.textContent=msg; }
+  function setLabel(msg){ var el=ge('ag-loading-text'); if(el) el.textContent=msg; }
+
   var params = new URLSearchParams(window.location.search);
   _token = params.get('t') || params.get('token');
+
+  setDetalhe('Token: '+ (_token ? _token.substring(0,12)+'...' : 'não encontrado'));
 
   if(!_token){
     mostrarErro('Link inválido','Nenhum token encontrado na URL.');
     return;
   }
 
+  /* Timeout de segurança: 12 segundos */
+  var _timedOut = false;
+  var _safetyTimer = setTimeout(function(){
+    _timedOut = true;
+    mostrarErro('Tempo esgotado','O servidor demorou para responder. Verifique sua conexão e tente novamente.');
+  }, 12000);
+
   try {
+    setLabel('Conectando ao servidor…');
+    setDetalhe('Buscando dados do link…');
+
     var r = await db.from('agendamento_links').select('*').eq('token',_token).maybeSingle();
-    if(r.error) throw r.error;
-    if(!r.data){ mostrarErro('Link não encontrado','Este link não existe ou foi removido.'); return; }
+
+    if(_timedOut) return;
+    clearTimeout(_safetyTimer);
+
+    if(r.error){
+      setDetalhe('Erro Supabase: ' + r.error.message);
+      throw r.error;
+    }
+
+    if(!r.data){
+      mostrarErro('Link não encontrado','Este link não existe ou foi removido.');
+      return;
+    }
+
+    setDetalhe('Link encontrado. Status: ' + r.data.status);
 
     var st = r.data.status;
 
-    /* Verifica expiração — expires_at pode ser nulo (link sem prazo fixo) */
+    /* expires_at pode ser nulo → link sem prazo fixo */
     var isExpiredByDate = false;
     if(r.data.expires_at){
       _expiresAt = new Date(r.data.expires_at);
-      if(isNaN(_expiresAt.getTime())) _expiresAt = null;
-      else if(_expiresAt <= new Date()) isExpiredByDate = true;
+      if(!isNaN(_expiresAt.getTime()) && _expiresAt <= new Date()) isExpiredByDate = true;
     }
 
     if(st==='expirado'||st==='usado'||isExpiredByDate){
@@ -829,50 +857,44 @@ async function _init(){
       txt('ag-obs-adm-txt', r.data.observacao);
     }
   } catch(e){
-    mostrarErro('Erro de conexão','Não foi possível validar o link: '+e.message);
+    clearTimeout(_safetyTimer);
+    if(!_timedOut) mostrarErro('Erro de conexão','Não foi possível validar o link: '+e.message);
   }
 }
 
 /* ══ TIMER ══ */
 function iniciarTimer(){
-  /*
-   * O timer mostra 10 minutos de sessão LOCAL (tempo que o cliente tem
-   * para concluir o agendamento após abrir a página).
-   * Se o link tiver expires_at no futuro, também respeitamos esse limite.
-   */
-  var SESSION_MS = 10 * 60 * 1000;            // 10 min de sessão
-  var _sessionStart = Date.now();
-  var _sessionEnd   = _sessionStart + SESSION_MS;
-
-  /* Se o link tem data de expiração menor que 10 min, usa ela */
-  if(_expiresAt && _expiresAt.getTime() < _sessionEnd){
+  /* Countdown de 10 min de sessão local (a partir do momento que a página abriu) */
+  var SESSION_MS  = 10 * 60 * 1000;
+  var _sessionEnd = Date.now() + SESSION_MS;
+  /* Se o link tem expires_at futuro e menor que 10 min, respeita esse limite */
+  if(_expiresAt && !isNaN(_expiresAt.getTime()) && _expiresAt.getTime() < _sessionEnd){
     _sessionEnd = _expiresAt.getTime();
   }
-
-  var TOTAL = _sessionEnd - _sessionStart;     // duração real em ms
-  var CIRC  = 2 * Math.PI * 21;               // ~132
+  var TOTAL = _sessionEnd - Date.now();
+  var CIRC  = 2*Math.PI*21; // ~132
 
   function tick(){
     var rem = _sessionEnd - Date.now();
-    if(rem <= 0){
+    if(rem<=0){
       clearInterval(_timerIntvl);
       mostrarErro('⏰ Tempo esgotado','O tempo de agendamento acabou. Solicite um novo link.');
       return;
     }
-    var pct  = Math.min(1, Math.max(0, rem / TOTAL));
-    var mins = Math.floor(rem / 60000);
-    var secs = Math.floor((rem % 60000) / 1000);
-    var t    = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
-    var color = pct > .5 ? 'var(--gold)' : pct > .2 ? '#ffaa00' : '#ff3366';
+    var pct  = Math.min(1, Math.max(0, rem/TOTAL));
+    var mins = Math.floor(rem/60000);
+    var secs = Math.floor((rem%60000)/1000);
+    var t    = String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
+    var color= pct>.5?'var(--gold)':pct>.2?'#ffaa00':'#ff3366';
 
-    var arc = ge('ag-ring-arc');
-    if(arc){ arc.style.strokeDashoffset = CIRC*(1-pct); arc.style.stroke = color; }
-    txt('ag-timer-num', t);
-    var tv = ge('ag-timer-val'); if(tv){ tv.textContent = t; tv.style.color = color; }
-    var pf = ge('ag-prog-fill'); if(pf){ pf.style.width = (pct*100)+'%'; pf.style.background = color; }
+    var arc  = ge('ag-ring-arc');
+    if(arc){ arc.style.strokeDashoffset=CIRC*(1-pct); arc.style.stroke=color; }
+    txt('ag-timer-num',t);
+    var tv=ge('ag-timer-val'); if(tv){tv.textContent=t;tv.style.color=color;}
+    var pf=ge('ag-prog-fill'); if(pf){pf.style.width=(pct*100)+'%';pf.style.background=color;}
   }
   tick();
-  _timerIntvl = setInterval(tick, 1000);
+  _timerIntvl=setInterval(tick,1000);
 }
 
 /* ══ BLOCO INFO PACOTE ══ */
