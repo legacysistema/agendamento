@@ -799,7 +799,7 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
     bookedSet[a.data+'_'+(a.horario||'').substring(0,5)]=true;
   });
 
-  function isBloqRec(dataStr, horario){
+  function isBloqRec(dataStr, horario, temBloqPorPacote){
     var parts=dataStr.split('-').map(Number);
     var dt=new Date(parts[0],parts[1]-1,parts[2]);
     var diaSem=dt.getDay();
@@ -818,9 +818,8 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
       if(b.pacote_id !== null && b.pacote_id !== undefined && b.pacote_id !== ''){
         if(_pacoteId !== null && _pacoteId !== undefined){
           if(String(b.pacote_id) === String(_pacoteId)) return true;
-          continue; /* este bloqueio é de outro pacote, não afeta */
+          continue; /* bloqueio de outro pacote — ignora */
         }
-        /* sem _pacoteId disponível: fallback por nome */
         var bni=normStr(String(b.pacote_id));
         var pni=normStr(pacoteNome||''); var pci=normStr(categoria||'');
         if(bni&&(bni===pni||pni.includes(bni)||bni.includes(pni)||bni===pci||pci.includes(bni)||bni.includes(pci))) return true;
@@ -833,11 +832,14 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
         var bn=normStr(b.pacote_nome||b.pacote||'');
         var pn=normStr(pacoteNome||''); var pc=normStr(categoria||'');
         if(bn&&(bn===pn||pn.includes(bn)||bn.includes(pn)||bn===pc||pc.includes(bn)||bn.includes(pc))) return true;
-        continue; /* bloqueio específico de outro pacote */
+        continue; /* bloqueio de outro pacote — ignora */
       }
 
-      /* ── PRIORIDADE 2: categoria ── */
+      /* ── PRIORIDADE 2: categoria ──
+         SE o pacote tem regras próprias de bloqueio (temBloqPorPacote),
+         bloqueios de categoria NÃO se aplicam — o pacote sobrescreve a categoria. */
       if(b.categoria&&b.categoria.trim()!==''){
+        if(temBloqPorPacote) continue; /* pacote tem regra própria, ignora categoria */
         var bcat=normStr(b.categoria); var ccat=normStr(categoria||'');
         if(bcat&&ccat&&bcat!==ccat&&!ccat.includes(bcat)&&!bcat.includes(ccat)) continue;
       }
@@ -909,7 +911,7 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
         var key=ds+'_'+hs;
         if(excSet[ds+'_*']||excSet[key]) return;
         if(bookedSet[key]) return;
-        if(isBloqRec(ds,hs,pacoteNome)) return;
+        if(isBloqRec(ds, hs, diasLivresPacote !== null)) return;
         if(seen[key]) return;
         seen[key]=true;
         slots.push({data:ds,horario:hs,localizacao:regra.localizacao||'',localizacao_link:regra.localizacao_link||'',observacoes:regra.observacoes||''});
