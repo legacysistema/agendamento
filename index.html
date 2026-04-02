@@ -676,7 +676,7 @@ window.goStep2 = async function(){
   var fimStr  = dateStr(fimDate);
 
   var resultados = await Promise.all([
-    getDisponibilidade(90, _catSel),
+    getDisponibilidade(90, _catSel, _pacoteSel),
     db.from('agenda_bloqueios')
       .select('id,data,horario,pacote_id,categoria,motivo')
       .gte('data', hojeStr)
@@ -693,7 +693,7 @@ window.goStep2 = async function(){
 };
 
 /* ══ LÓGICA DE DISPONIBILIDADE (baseada em agenda_regras) ══ */
-async function getDisponibilidade(periodo, categoria){
+async function getDisponibilidade(periodo, categoria, pacoteNome){
   var hoje    = new Date();
   var hojeStr = dateStr(hoje);
   var fimDate = new Date(hoje); fimDate.setDate(fimDate.getDate()+periodo);
@@ -702,7 +702,7 @@ async function getDisponibilidade(periodo, categoria){
   /* Busca paralela */
   var rRegras    = await db.from('agenda_regras').select('id,tipo,dias_semana,horarios,localizacao,localizacao_link,observacoes,ativo').eq('ativo',true).then(function(r){return r.data||[];}).catch(function(){return [];});
   var rExcecoes  = await db.from('agenda_excecoes').select('data,horario,bloqueado').gte('data',hojeStr).lte('data',fimStr).then(function(r){return r.data||[];}).catch(function(){return [];});
-  var rBloqRec   = await db.from('agenda_bloqueios_recorrentes').select('dias_semana,horarios_bloqueados,data_inicio,data_fim,categoria,ativo').eq('ativo',true).then(function(r){return r.data||[];}).catch(function(){return [];});
+  var rBloqRec   = await db.from('agenda_bloqueios_recorrentes').select('dias_semana,horarios_bloqueados,data_inicio,data_fim,categoria,pacote,pacote_nome,pacote_id,ativo').eq('ativo',true).then(function(r){return r.data||[];}).catch(function(){return [];});
   var rAgendados = await db.from('agendamentos_clientes').select('data,horario,status').gte('data',hojeStr).lte('data',fimStr).neq('status','cancelado').then(function(r){return r.data||[];}).catch(function(){return [];});
 
   /* Filtra regras pela categoria */
@@ -733,10 +733,26 @@ async function getDisponibilidade(periodo, categoria){
       var hbs; try{hbs=Array.isArray(b.horarios_bloqueados)?b.horarios_bloqueados:JSON.parse(b.horarios_bloqueados||'[]');}catch(_){hbs=[];}
       var horMatches=hbs.length===0||hbs.some(function(h){return String(h).substring(0,5)===String(horario).substring(0,5);});
       if(!horMatches) continue;
-      if(b.categoria&&categoria){
-        var bcat=normStr(b.categoria); var ccat=normStr(categoria);
+
+      /* ── PRIORIDADE 1: bloqueio tem pacote_nome ou pacote (nome específico) ──
+         Afeta SOMENTE aquele pacote. Se não bater com o pacote selecionado, ignora. */
+      var temPacoteEspec = (b.pacote_nome&&b.pacote_nome.trim()!=='') || (b.pacote&&b.pacote.trim()!=='');
+      if(temPacoteEspec){
+        var bn = normStr(b.pacote_nome||b.pacote||'');
+        var pn = normStr(pacoteNome||'');
+        var pc = normStr(categoria||'');
+        /* Bloqueia só se o nome do pacote bater (compara com nome E com categoria) */
+        if(bn && (bn===pn || pn.includes(bn) || bn.includes(pn) || bn===pc || pc.includes(bn) || bn.includes(pc))) return true;
+        continue; /* pacote específico mas não é o nosso — ignora */
+      }
+
+      /* ── PRIORIDADE 2: bloqueio tem categoria (sem pacote específico) ── */
+      if(b.categoria&&b.categoria.trim()!==''){
+        var bcat=normStr(b.categoria); var ccat=normStr(categoria||'');
         if(bcat&&ccat&&bcat!==ccat&&!ccat.includes(bcat)&&!bcat.includes(ccat)) continue;
       }
+
+      /* ── PRIORIDADE 3: bloqueio global (sem pacote e sem categoria) ── */
       return true;
     }
     return false;
@@ -757,7 +773,7 @@ async function getDisponibilidade(periodo, categoria){
         var key=ds+'_'+hs;
         if(excSet[ds+'_*']||excSet[key]) return;
         if(bookedSet[key]) return;
-        if(isBloqRec(ds,hs)) return;
+        if(isBloqRec(ds,hs,pacoteNome)) return;
         if(seen[key]) return;
         seen[key]=true;
         slots.push({data:ds,horario:hs,localizacao:regra.localizacao||'',localizacao_link:regra.localizacao_link||'',observacoes:regra.observacoes||''});
