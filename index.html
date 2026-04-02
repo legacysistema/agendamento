@@ -422,8 +422,7 @@ body::after{
       <!-- LOADING -->
       <div id="ag-loading" class="ag-loading-screen">
         <div class="ag-loading-spin"></div>
-        <div class="ag-loading-text" id="ag-loading-text">Validando link…</div>
-        <div id="ag-loading-detail" style="font-size:11px;color:rgba(110,110,138,0.5);margin-top:8px;font-family:var(--font-ui);max-width:280px;line-height:1.5;text-align:center;"></div>
+        <div class="ag-loading-text">Validando link…</div>
       </div>
 
       <!-- ERRO -->
@@ -800,19 +799,12 @@ async function _init(){
     if(r.error) throw r.error;
     if(!r.data){ mostrarErro('Link não encontrado','Este link não existe ou foi removido.'); return; }
 
+    _expiresAt = new Date(r.data.expires_at);
     var st = r.data.status;
-
-    /* Verifica expiração */
-    var isExpiredByDate = false;
-    if(r.data.expires_at){
-      _expiresAt = new Date(r.data.expires_at);
-      if(!isNaN(_expiresAt.getTime()) && _expiresAt <= new Date()) isExpiredByDate = true;
-    }
-
-    if(st==='expirado'||st==='usado'||isExpiredByDate){
+    if(st==='expirado'||st==='usado'||_expiresAt<=new Date()){
       var msg = st==='usado' ? 'Este link já foi utilizado para um agendamento.' : 'Este link expirou. Solicite um novo link ao fotógrafo.';
       var ttl = st==='usado' ? '📌 Link já utilizado' : '⏰ Link expirado';
-      if(st==='ativo'&&isExpiredByDate) await db.from('agendamento_links').update({status:'expirado'}).eq('token',_token);
+      if(st==='ativo') await db.from('agendamento_links').update({status:'expirado'}).eq('token',_token);
       mostrarErro(ttl,msg);
       return;
     }
@@ -835,24 +827,17 @@ async function _init(){
 
 /* ══ TIMER ══ */
 function iniciarTimer(){
-  /* Countdown de 10 min de sessão local (a partir do momento que a página abriu) */
-  var SESSION_MS  = 10 * 60 * 1000;
-  var _sessionEnd = Date.now() + SESSION_MS;
-  /* Se o link tem expires_at futuro e menor que 10 min, respeita esse limite */
-  if(_expiresAt && !isNaN(_expiresAt.getTime()) && _expiresAt.getTime() < _sessionEnd){
-    _sessionEnd = _expiresAt.getTime();
-  }
-  var TOTAL = _sessionEnd - Date.now();
+  var TOTAL = 10*60*1000;
   var CIRC  = 2*Math.PI*21; // ~132
 
   function tick(){
-    var rem = _sessionEnd - Date.now();
+    var rem = _expiresAt - Date.now();
     if(rem<=0){
       clearInterval(_timerIntvl);
       mostrarErro('⏰ Tempo esgotado','O tempo de agendamento acabou. Solicite um novo link.');
       return;
     }
-    var pct  = Math.min(1, Math.max(0, rem/TOTAL));
+    var pct  = rem/TOTAL;
     var mins = Math.floor(rem/60000);
     var secs = Math.floor((rem%60000)/1000);
     var t    = String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
