@@ -766,8 +766,8 @@ window.goStep2 = async function(){
   var now=new Date(); _calYear=now.getFullYear(); _calMonth=now.getMonth();
 
   hide('ag-cal-content'); show('ag-cal-loading');
-  _slots    = await getDisponibilidade(90, _catSel, _pacoteSel);
-  _bloqueios = [];
+  _slots     = await getDisponibilidade(90, _catSel, _pacoteSel);
+  _bloqueios = []; /* bloqueios recorrentes/pontuais já filtrados dentro de getDisponibilidade */
   hide('ag-cal-loading'); show('ag-cal-content');
   renderCal();
 };
@@ -814,14 +814,29 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
       var horMatches=hbs.length===0||hbs.some(function(h){return String(h).substring(0,5)===String(horario).substring(0,5);});
       if(!horMatches) continue;
 
-      /* ── PRIORIDADE 1: bloqueio tem pacote_nome ou pacote (nome específico) ──
+      /* ── PRIORIDADE 1: bloqueio tem pacote_id numérico ──
+         Compara com _pacoteId. Se não bater, ignora (não vaza para a categoria). */
+      if(b.pacote_id !== null && b.pacote_id !== undefined && b.pacote_id !== ''){
+        /* Match por id numérico */
+        if(_pacoteId !== null && _pacoteId !== undefined){
+          if(String(b.pacote_id) === String(_pacoteId)) return true;
+          continue; /* pacote_id existe mas não é o nosso */
+        }
+        /* Sem _pacoteId: fallback por nome */
+        var bni = normStr(String(b.pacote_id));
+        var pni = normStr(pacoteNome||'');
+        var pci = normStr(categoria||'');
+        if(bni && (bni===pni || pni.includes(bni) || bni.includes(pni) || bni===pci || pci.includes(bni) || bni.includes(pci))) return true;
+        continue;
+      }
+
+      /* ── PRIORIDADE 1b: bloqueio tem pacote_nome ou pacote (texto) ──
          Afeta SOMENTE aquele pacote. Se não bater com o pacote selecionado, ignora. */
       var temPacoteEspec = (b.pacote_nome&&b.pacote_nome.trim()!=='') || (b.pacote&&b.pacote.trim()!=='');
       if(temPacoteEspec){
         var bn = normStr(b.pacote_nome||b.pacote||'');
         var pn = normStr(pacoteNome||'');
         var pc = normStr(categoria||'');
-        /* Bloqueia só se o nome do pacote bater (compara com nome E com categoria) */
         if(bn && (bn===pn || pn.includes(bn) || bn.includes(pn) || bn===pc || pc.includes(bn) || bn.includes(pc))) return true;
         continue; /* pacote específico mas não é o nosso — ignora */
       }
@@ -1043,20 +1058,30 @@ window.selecionarData = function(iso){
  *  3. Nenhum dos dois → bloqueio global, afeta todos
  */
 function bloqueioAfetaPacote(b, pacoteId, pacoteNome, categoria){
+  /* Campo global explícito → afeta todos */
+  if(b.global === true || b.global === 1 || b.global === '1') return true;
+
   if(b.pacote_id !== null && b.pacote_id !== undefined && b.pacote_id !== ''){
-    /* Tenta match por id numérico */
+    /* Match por id numérico */
     if(pacoteId !== null && pacoteId !== undefined){
       return String(b.pacote_id) === String(pacoteId);
     }
-    /* Fallback: admin pode ter armazenado o nome do pacote no campo pacote_id
-       ou pode existir um campo pacote_nome junto — tenta por nome/categoria */
+    /* Fallback por nome quando não temos _pacoteId */
     var bn = normStr(String(b.pacote_id));
     var pn = normStr(pacoteNome||'');
     var pc = normStr(categoria||'');
     if(bn && (bn === pn || bn === pc || pn.includes(bn) || pc.includes(bn))) return true;
-    /* Se temos pacote_id mas não conseguimos resolver, NÃO bloqueamos
-       (regra: pacote_id afeta SOMENTE aquele pacote — não vazar para outros) */
-    return false;
+    return false; /* pacote_id presente mas não resolvido — não vaza */
+  }
+
+  /* Match por pacote_nome (texto) */
+  var temNomePacote = b.pacote_nome && b.pacote_nome.trim() !== '';
+  if(temNomePacote){
+    var bn2 = normStr(b.pacote_nome);
+    var pn2 = normStr(pacoteNome||'');
+    var pc2 = normStr(categoria||'');
+    if(bn2 && (bn2===pn2 || pn2.includes(bn2) || bn2.includes(pn2) || bn2===pc2 || pc2.includes(bn2) || bn2.includes(pc2))) return true;
+    return false; /* nome específico mas não é o nosso */
   }
 
   if(b.categoria !== null && b.categoria !== undefined && b.categoria !== ''){
@@ -1065,7 +1090,7 @@ function bloqueioAfetaPacote(b, pacoteId, pacoteNome, categoria){
     return bc && cc && (bc === cc || cc.includes(bc) || bc.includes(cc));
   }
 
-  /* Bloqueio global */
+  /* Bloqueio global (sem pacote, sem categoria) */
   return true;
 }
 
