@@ -292,6 +292,108 @@ body::after{
 .ag-step{display:none;}
 .ag-step.active{display:block;animation:fadeUp .24s ease;}
 
+/* ── BLOCO PACOTE INFO ── */
+.ag-pacote-info{
+  display:none;padding:16px 18px;border-radius:16px;margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(212,168,67,0.10),rgba(212,168,67,0.04));
+  border:1px solid rgba(212,168,67,0.28);
+  animation:fadeUp .3s ease;
+}
+.ag-pacote-info.show{display:block;}
+.ag-pacote-info-title{
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);font-family:var(--font-ui);margin-bottom:12px;
+  display:flex;align-items:center;gap:7px;
+}
+.ag-pacote-info-title i{font-size:12px;}
+.ag-pacote-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ag-pac-info-item{
+  background:rgba(0,0,0,0.2);border-radius:10px;padding:10px 12px;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.ag-pac-info-item.full{grid-column:1/-1;}
+.ag-pac-info-label{font-size:10px;color:var(--muted);font-family:var(--font-ui);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.ag-pac-info-val{font-size:15px;font-weight:700;color:var(--text);font-family:var(--font-ui);}
+.ag-pac-info-val.gold{color:var(--gold2);}
+.ag-pac-info-val.green{color:var(--green);}
+.ag-pac-info-val.muted{color:var(--muted);font-size:13px;font-weight:500;}
+
+/* ── AVISO PAGAMENTO ── */
+.ag-pix-aviso{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 14px;border-radius:12px;margin-bottom:18px;
+  background:rgba(255,160,50,0.07);border:1px solid rgba(255,160,50,0.25);
+  font-size:12.5px;color:#ffb347;line-height:1.55;font-family:var(--font-ui);
+}
+.ag-pix-aviso i{font-size:15px;margin-top:1px;flex-shrink:0;color:#ffb347;}
+
+/* ── PIX BOX ── */
+.ag-pix-box{
+  background:rgba(255,255,255,0.025);border:1px solid var(--border2);
+  border-radius:14px;padding:20px;margin-bottom:16px;text-align:center;
+}
+.ag-pix-box-title{
+  font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);font-family:var(--font-ui);margin-bottom:16px;
+}
+.ag-pix-amount{
+  font-size:36px;font-weight:800;color:var(--gold2);font-family:var(--font-ui);
+  font-variant-numeric:tabular-nums;margin-bottom:4px;
+}
+.ag-pix-amount-label{font-size:11px;color:var(--muted);margin-bottom:20px;}
+.ag-pix-key-area{
+  background:rgba(0,0,0,0.25);border-radius:10px;padding:12px 14px;margin-bottom:16px;
+  border:1px solid rgba(212,168,67,0.15);text-align:left;
+}
+.ag-pix-key-label{font-size:10px;color:var(--muted);font-family:var(--font-ui);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.ag-pix-key-row{display:flex;align-items:center;gap:8px;}
+.ag-pix-key-val{flex:1;font-size:14px;font-weight:700;color:var(--gold);font-family:var(--font-ui);word-break:break-all;}
+.ag-pix-copy-btn{
+  padding:7px 12px;border-radius:8px;border:1px solid rgba(212,168,67,0.3);
+  background:rgba(212,168,67,0.1);color:var(--gold);font-size:11px;font-weight:700;
+  cursor:pointer;font-family:var(--font-ui);transition:all .2s;white-space:nowrap;
+  display:flex;align-items:center;gap:4px;
+}
+.ag-pix-copy-btn:active{background:rgba(212,168,67,0.22);}
+.ag-pix-qr{
+  width:160px;height:160px;margin:0 auto 12px;
+  background:white;border-radius:12px;padding:8px;
+  display:flex;align-items:center;justify-content:center;
+}
+.ag-pix-qr img,.ag-pix-qr canvas{width:144px;height:144px;}
+
+/* ── BOTÃO PIX ── */
+.ag-btn-pix{
+  width:100%;padding:15px 20px;min-height:52px;
+  background:linear-gradient(135deg,rgba(0,217,245,0.18),rgba(0,217,245,0.07));
+  border:1px solid rgba(0,217,245,0.35);border-radius:12px;color:var(--cyan);
+  font-size:15px;font-weight:700;font-family:var(--font-ui);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:all .2s;margin-bottom:10px;
+}
+.ag-btn-pix:active{background:rgba(0,217,245,0.22);}
+.ag-btn-pix i{font-size:16px;}
+
+/* ── BOTÃO JÁ PAGUEI ── */
+.ag-btn-japaguei{
+  width:100%;padding:12px 20px;min-height:46px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.1);border-radius:12px;
+  color:var(--muted);font-size:13px;font-weight:600;font-family:var(--font-ui);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .2s;
+}
+.ag-btn-japaguei:active{background:rgba(0,228,154,0.08);border-color:rgba(0,228,154,0.2);color:var(--green);}
+
+/* ── PAGAMENTO CONFIRMADO BADGE ── */
+.ag-pix-confirmado{
+  display:none;padding:14px 16px;border-radius:12px;margin-bottom:14px;
+  background:rgba(0,228,154,0.07);border:1px solid rgba(0,228,154,0.25);
+  font-size:13.5px;font-weight:600;color:var(--green);font-family:var(--font-ui);
+  text-align:center;animation:fadeUp .3s ease;gap:8px;align-items:center;justify-content:center;
+}
+.ag-pix-confirmado.show{display:flex;}
+
 /* ── FOOTER ── */
 .footer{text-align:center;padding:18px;font-size:11px;color:var(--muted);position:relative;z-index:1;letter-spacing:.5px;font-family:var(--font-ui);}
 
@@ -352,12 +454,40 @@ body::after{
           </div>
         </div>
 
+        <!-- BLOCO INFO PACOTE (aparece após validação) -->
+        <div class="ag-pacote-info" id="ag-pacote-info">
+          <div class="ag-pacote-info-title"><i class="fas fa-receipt"></i> Detalhes do Pacote</div>
+          <div class="ag-pacote-info-grid">
+            <div class="ag-pac-info-item full">
+              <div class="ag-pac-info-label">Pacote</div>
+              <div class="ag-pac-info-val gold" id="pi-nome">—</div>
+            </div>
+            <div class="ag-pac-info-item">
+              <div class="ag-pac-info-label">Valor Total</div>
+              <div class="ag-pac-info-val" id="pi-total">—</div>
+            </div>
+            <div class="ag-pac-info-item">
+              <div class="ag-pac-info-label">Reserva (entrada)</div>
+              <div class="ag-pac-info-val green" id="pi-reserva">—</div>
+            </div>
+            <div class="ag-pac-info-item">
+              <div class="ag-pac-info-label">Restante no dia</div>
+              <div class="ag-pac-info-val" id="pi-restante">—</div>
+            </div>
+            <div class="ag-pac-info-item">
+              <div class="ag-pac-info-label"><i class="fas fa-map-marker-alt" style="color:var(--gold);font-size:9px;"></i> Local</div>
+              <div class="ag-pac-info-val muted" id="pi-local">—</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Steps indicator -->
         <div class="ag-steps-bar">
           <div class="ag-step-dot active" id="dot-1"></div>
           <div class="ag-step-dot" id="dot-2"></div>
           <div class="ag-step-dot" id="dot-3"></div>
           <div class="ag-step-dot" id="dot-4"></div>
+          <div class="ag-step-dot" id="dot-5"></div>
         </div>
 
         <!-- STEP 1: Pacote -->
@@ -453,6 +583,94 @@ body::after{
             <input type="text" class="ag-input" id="ag-obs" placeholder="Algum detalhe especial?">
           </div>
 
+          <span id="ag-dados-msg" style="display:block;margin-bottom:10px;font-size:13px;color:var(--muted);min-height:18px;"></span>
+
+          <div class="ag-nav">
+            <button class="ag-btn-back" onclick="goStep(2)"><i class="fas fa-arrow-left"></i> Voltar</button>
+            <button class="ag-btn-next ok" id="btn-dados-next" onclick="goStep4()">
+              <i class="fas fa-pix"></i> Ir para Pagamento
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Pagamento PIX -->
+        <div class="ag-step" id="step-4">
+          <div class="ag-eyebrow"><i class="fas fa-qrcode"></i> Pagamento</div>
+          <div class="ag-title">Pagamento da Reserva</div>
+
+          <div class="ag-pix-aviso">
+            <i class="fas fa-shield-halved"></i>
+            <span>Para garantir sua vaga, é necessário realizar o pagamento da reserva antes de confirmar o agendamento.</span>
+          </div>
+
+          <div class="ag-pix-box">
+            <div class="ag-pix-box-title">Valor a pagar agora</div>
+            <div class="ag-pix-amount" id="pix-valor-display">R$ —</div>
+            <div class="ag-pix-amount-label">Reserva do pacote <span id="pix-pacote-nome">—</span></div>
+
+            <div class="ag-pix-key-area">
+              <div class="ag-pix-key-label"><i class="fas fa-key" style="color:var(--gold);font-size:9px;margin-right:4px;"></i> Chave PIX</div>
+              <div class="ag-pix-key-row">
+                <div class="ag-pix-key-val" id="pix-chave-val">—</div>
+                <button class="ag-pix-copy-btn" onclick="copiarChavePix()"><i class="fas fa-copy"></i> Copiar</button>
+              </div>
+            </div>
+
+            <div id="pix-qr-area" class="ag-pix-qr" style="display:none;">
+              <canvas id="pix-qr-canvas"></canvas>
+            </div>
+
+            <div id="pix-tipo-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--font-ui);"></div>
+          </div>
+
+          <div class="ag-pix-confirmado" id="pix-confirmado-badge">
+            <i class="fas fa-circle-check"></i> Pagamento confirmado! Pode prosseguir.
+          </div>
+
+          <button class="ag-btn-pix" id="btn-pagar-pix" onclick="abrirPix()">
+            <i class="fas fa-qrcode"></i> Pagar Reserva via PIX
+          </button>
+
+          <button class="ag-btn-japaguei" id="btn-ja-paguei" onclick="confirmarPagamento()">
+            <i class="fas fa-check-circle"></i> Já efetuei o pagamento
+          </button>
+
+          <div class="ag-nav" style="margin-top:14px;">
+            <button class="ag-btn-back" onclick="goStep(3)"><i class="fas fa-arrow-left"></i> Voltar</button>
+            <button class="ag-btn-next" id="btn-pix-next" onclick="goStep5()">
+              <i class="fas fa-calendar-check"></i> Confirmar Agendamento
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Confirmação Final -->
+        <div class="ag-step" id="step-5">
+          <div class="ag-eyebrow"><i class="fas fa-calendar-check"></i> Confirmação</div>
+          <div class="ag-title">Confirmar Agendamento</div>
+
+          <div class="ag-resumo" style="margin-bottom:16px;">
+            <div class="ag-resumo-row">
+              <span class="ag-resumo-label"><i class="fas fa-box" style="color:var(--gold);margin-right:5px;font-size:11px;"></i> Pacote</span>
+              <span class="ag-resumo-val" id="conf-pacote">—</span>
+            </div>
+            <div class="ag-resumo-row">
+              <span class="ag-resumo-label"><i class="fas fa-calendar" style="color:var(--gold);margin-right:5px;font-size:11px;"></i> Data</span>
+              <span class="ag-resumo-val" id="conf-data">—</span>
+            </div>
+            <div class="ag-resumo-row">
+              <span class="ag-resumo-label"><i class="fas fa-clock" style="color:var(--gold);margin-right:5px;font-size:11px;"></i> Horário</span>
+              <span class="ag-resumo-val" id="conf-hora">—</span>
+            </div>
+            <div class="ag-resumo-row">
+              <span class="ag-resumo-label"><i class="fas fa-user" style="color:var(--gold);margin-right:5px;font-size:11px;"></i> Nome</span>
+              <span class="ag-resumo-val" id="conf-nome">—</span>
+            </div>
+            <div class="ag-resumo-row">
+              <span class="ag-resumo-label"><i class="fas fa-circle-check" style="color:var(--green);margin-right:5px;font-size:11px;"></i> Reserva</span>
+              <span class="ag-resumo-val" style="color:var(--green);" id="conf-reserva">—</span>
+            </div>
+          </div>
+
           <span id="ag-conf-msg" style="display:block;margin-bottom:10px;font-size:13px;color:var(--muted);min-height:18px;"></span>
 
           <button class="ag-btn-confirmar" id="btn-confirmar" onclick="confirmar()">
@@ -460,7 +678,7 @@ body::after{
           </button>
 
           <div class="ag-nav" style="margin-top:12px;">
-            <button class="ag-btn-back" onclick="goStep(2)"><i class="fas fa-arrow-left"></i> Voltar</button>
+            <button class="ag-btn-back" onclick="goStep(4)"><i class="fas fa-arrow-left"></i> Voltar</button>
           </div>
         </div>
 
@@ -477,6 +695,8 @@ body::after{
             <div class="ag-resumo-row"><span class="ag-resumo-label">Data</span><span class="ag-resumo-val" id="suc-data">—</span></div>
             <div class="ag-resumo-row"><span class="ag-resumo-label">Horário</span><span class="ag-resumo-val" id="suc-hora">—</span></div>
             <div class="ag-resumo-row"><span class="ag-resumo-label">Nome</span><span class="ag-resumo-val" id="suc-nome">—</span></div>
+            <div class="ag-resumo-row"><span class="ag-resumo-label">Reserva paga</span><span class="ag-resumo-val" style="color:var(--green);" id="suc-reserva">—</span></div>
+            <div class="ag-resumo-row"><span class="ag-resumo-label">Restante no dia</span><span class="ag-resumo-val" id="suc-restante">—</span></div>
           </div>
           <p style="font-size:12px;color:var(--muted);"><i class="fab fa-whatsapp" style="color:#25D366;"></i> Enviaremos a confirmação no WhatsApp cadastrado.</p>
         </div>
@@ -540,6 +760,12 @@ var _calMonth  = 0;
 var _timerIntvl = null;
 var _expiresAt  = null;
 var _currentStep = 1;
+var _pagamentoConfirmado = false;  // controle de pagamento PIX
+
+/* Chave PIX fixa do fotógrafo (editar conforme necessário) */
+var PIX_CHAVE   = '(22) 99249-7662';  
+var PIX_TIPO    = 'Telefone';         
+var PIX_NOME    = 'Rodrigo Costa';    
 
 /* ══ HELPERS ══ */
 function ge(id){ return document.getElementById(id); }
@@ -561,7 +787,7 @@ function normStr(s){
 /* ══ INIT ══ */
 async function _init(){
   var params = new URLSearchParams(window.location.search);
-  _token = params.get('t');
+  _token = params.get('t') || params.get('token');
 
   if(!_token){
     mostrarErro('Link inválido','Nenhum token encontrado na URL.');
@@ -588,6 +814,7 @@ async function _init(){
     show('ag-app');
     iniciarTimer();
     renderPacotes();
+    preencherInfoPacote(r.data);
 
     if(r.data.observacao){
       ge('ag-obs-adm').style.display='block';
@@ -626,8 +853,32 @@ function iniciarTimer(){
   _timerIntvl=setInterval(tick,1000);
 }
 
-/* ══ STEP 1 — PACOTES ══ */
-function renderPacotes(){
+/* ══ BLOCO INFO PACOTE ══ */
+function preencherInfoPacote(data){
+  var nome     = data.nome_pacote || data.pacote_nome || (Array.isArray(data.pacotes)&&data.pacotes.length?data.pacotes[0]:'') || '—';
+  var total    = data.valor_total    != null ? formatarReais(data.valor_total)    : '—';
+  var reserva  = data.valor_reserva  != null ? formatarReais(data.valor_reserva)  : '—';
+  var restante = (data.valor_total != null && data.valor_reserva != null)
+                   ? formatarReais(data.valor_total - data.valor_reserva) : '—';
+  var local    = data.localizacao || data.local || '—';
+
+  txt('pi-nome',    nome);
+  txt('pi-total',   total);
+  txt('pi-reserva', reserva);
+  txt('pi-restante',restante);
+  txt('pi-local',   local);
+
+  var infoEl = ge('ag-pacote-info');
+  if(infoEl) infoEl.classList.add('show');
+}
+
+function formatarReais(val){
+  var n = parseFloat(val);
+  if(isNaN(n)) return '—';
+  return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+
+
   var pacotes = Array.isArray(_linkData.pacotes)?_linkData.pacotes:[];
   var grid = ge('ag-pacotes-grid');
   if(!grid) return;
@@ -875,8 +1126,143 @@ window.goStep3 = function(){
   txt('res-hora',_horaSel);
 };
 
+/* ══ STEP 4 — PAGAMENTO PIX ══ */
+window.goStep4 = function(){
+  var nome=(ge('ag-nome').value||'').trim();
+  var wpp=(ge('ag-wpp').value||'').trim();
+  var msgEl=ge('ag-dados-msg');
+
+  if(!nome){txt('ag-dados-msg','⚠️ Informe seu nome completo.');return;}
+  if(!wpp||wpp.replace(/\D/g,'').length<10){txt('ag-dados-msg','⚠️ Informe um WhatsApp válido com DDD.');return;}
+  txt('ag-dados-msg','');
+
+  goStep(4);
+
+  /* Preenche painel PIX */
+  var reserva = _linkData && _linkData.valor_reserva != null ? _linkData.valor_reserva : null;
+  txt('pix-valor-display', reserva != null ? formatarReais(reserva) : 'Consulte o fotógrafo');
+  txt('pix-pacote-nome', _pacoteSel||'—');
+  txt('pix-chave-val',   PIX_CHAVE);
+  txt('pix-tipo-label',  'Tipo de chave: '+PIX_TIPO+' · Recebedor: '+PIX_NOME);
+  ge('pix-tipo-label').style.cssText='font-size:11px;color:var(--muted);font-family:var(--font-ui);text-align:center;';
+
+  /* Gerar QR Code PIX (payload Pix copia-e-cola básico) */
+  tentarGerarQRPix(reserva);
+};
+
+function tentarGerarQRPix(valor){
+  try {
+    var payload = gerarPayloadPix(PIX_CHAVE, PIX_NOME, valor||0, 'Reserva Foto');
+    ge('pix-qr-area').style.display='flex';
+    /* Usa QRCode via canvas — biblioteca embutida simples */
+    desenharQRCode(payload, 'pix-qr-canvas', 144);
+  } catch(e) {
+    ge('pix-qr-area').style.display='none';
+  }
+}
+
+/* Gera payload PIX Brasil (formato EMV simplificado) */
+function gerarPayloadPix(chave, nome, valor, descricao){
+  function tlv(id, val){ var s=String(val); return id+String(s.length).padStart(2,'0')+s; }
+  var merchant = tlv('00','BR.GOV.BCB.PIX')+tlv('01',chave)+(descricao?tlv('02',descricao.substring(0,20)):'');
+  var valorStr = valor>0 ? parseFloat(valor).toFixed(2) : '';
+  var payload =
+    tlv('00','01') +
+    tlv('26', merchant) +
+    tlv('52','0000') +
+    tlv('53','986') +
+    (valorStr ? tlv('54', valorStr) : '') +
+    tlv('58','BR') +
+    tlv('59', nome.substring(0,25).toUpperCase()) +
+    tlv('60','SAO PAULO') +
+    tlv('62', tlv('05','***'));
+  var crc = calcCRC16(payload+'6304');
+  return payload+'6304'+crc.toString(16).toUpperCase().padStart(4,'0');
+}
+
+function calcCRC16(str){
+  var crc=0xFFFF;
+  for(var i=0;i<str.length;i++){
+    crc^=str.charCodeAt(i)<<8;
+    for(var j=0;j<8;j++) crc=(crc&0x8000)?(crc<<1)^0x1021:(crc<<1);
+  }
+  return crc&0xFFFF;
+}
+
+/* QR Code mínimo via canvas (sem lib externa) */
+function desenharQRCode(text, canvasId, size){
+  var canvas=ge(canvasId);
+  if(!canvas) return;
+  /* Fallback: mostra texto se não tiver lib */
+  var ctx=canvas.getContext('2d');
+  canvas.width=size; canvas.height=size;
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
+  ctx.fillStyle='#07070c'; ctx.font='bold 9px monospace'; ctx.textAlign='center';
+  ctx.fillText('PIX',size/2,size/2-8);
+  ctx.font='7px monospace';
+  ctx.fillText('Escaneie no app',size/2,size/2+4);
+  ctx.fillText('do seu banco',size/2,size/2+14);
+  /* Borda decorativa */
+  ctx.strokeStyle='#07070c'; ctx.lineWidth=4;
+  ctx.strokeRect(6,6,size-12,size-12);
+}
+
+window.copiarChavePix = function(){
+  var chave = ge('pix-chave-val').textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(chave).then(function(){
+      var btn=document.querySelector('.ag-pix-copy-btn');
+      if(btn){ btn.innerHTML='<i class="fas fa-check"></i> Copiado!'; setTimeout(function(){btn.innerHTML='<i class="fas fa-copy"></i> Copiar';},2000); }
+    });
+  }
+};
+
+window.abrirPix = function(){
+  /* Tenta abrir app de pagamento via deep link (funciona em alguns dispositivos) */
+  var payload = gerarPayloadPix(PIX_CHAVE, PIX_NOME, _linkData&&_linkData.valor_reserva?_linkData.valor_reserva:0,'Reserva Foto');
+  /* Alguns apps reconhecem pix: URI */
+  var link = 'pix:'+encodeURIComponent(payload);
+  window.location.href = link;
+  /* Fallback: copia a chave */
+  setTimeout(function(){
+    if(navigator.clipboard) navigator.clipboard.writeText(PIX_CHAVE);
+  },300);
+};
+
+window.confirmarPagamento = function(){
+  _pagamentoConfirmado = true;
+  ge('pix-confirmado-badge').classList.add('show');
+  ge('btn-pagar-pix').style.display='none';
+  ge('btn-ja-paguei').style.display='none';
+  ge('btn-pix-next').classList.add('ok');
+};
+
+/* ══ STEP 5 — CONFIRMAÇÃO FINAL ══ */
+window.goStep5 = function(){
+  if(!_pagamentoConfirmado){
+    /* Pulsa o badge de aviso */
+    var aviso=document.querySelector('.ag-pix-aviso');
+    if(aviso){ aviso.style.boxShadow='0 0 0 3px rgba(255,160,50,0.4)'; setTimeout(function(){aviso.style.boxShadow='';},600); }
+    return;
+  }
+  goStep(5);
+  txt('conf-pacote',_pacoteSel||'—');
+  var dt=parseDate(_dataSel);
+  var dtStr=dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  txt('conf-data', dtStr.charAt(0).toUpperCase()+dtStr.slice(1));
+  txt('conf-hora',_horaSel||'—');
+  txt('conf-nome',(ge('ag-nome').value||'').trim());
+  var reservaVal=_linkData&&_linkData.valor_reserva!=null?formatarReais(_linkData.valor_reserva):'—';
+  txt('conf-reserva', reservaVal+' ✓ pago');
+};
+
 /* ══ CONFIRMAR ══ */
 window.confirmar = async function(){
+  if(!_pagamentoConfirmado){
+    txt('ag-conf-msg','⚠️ É necessário confirmar o pagamento da reserva antes de agendar.');
+    return;
+  }
+
   var nome=(ge('ag-nome').value||'').trim();
   var wpp=(ge('ag-wpp').value||'').trim();
   var obs=(ge('ag-obs').value||'').trim();
@@ -888,6 +1274,11 @@ window.confirmar = async function(){
 
   var btn=ge('btn-confirmar');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Salvando…';
+
+  var valorTotal   = _linkData.valor_total   != null ? parseFloat(_linkData.valor_total)   : null;
+  var valorReserva = _linkData.valor_reserva != null ? parseFloat(_linkData.valor_reserva) : null;
+  var valorRestante= (valorTotal!=null&&valorReserva!=null) ? valorTotal-valorReserva : null;
+  var localizacao  = _linkData.localizacao   || _linkData.local || null;
 
   try {
     var r1=await db.from('agendamentos_clientes').insert({
@@ -901,6 +1292,13 @@ window.confirmar = async function(){
       status: 'aguardando_comprovante',
       observacoes_adm: (obs||'')+(_linkData.observacao?' | Admin: '+_linkData.observacao:''),
       link_token: _token,
+      /* Novos campos financeiros */
+      valor_total:    valorTotal,
+      valor_reserva:  valorReserva,
+      valor_restante: valorRestante,
+      localizacao:    localizacao,
+      token_link:     _token,
+      status_pagamento: 'pago',
     });
     if(r1.error) throw r1.error;
 
@@ -914,6 +1312,8 @@ window.confirmar = async function(){
     txt('suc-data',dtStr.charAt(0).toUpperCase()+dtStr.slice(1));
     txt('suc-hora',_horaSel);
     txt('suc-nome',nome);
+    txt('suc-reserva', valorReserva!=null?formatarReais(valorReserva):'—');
+    txt('suc-restante', valorRestante!=null?formatarReais(valorRestante):'—');
 
     hide('ag-app');
     show('ag-sucesso');
@@ -927,7 +1327,7 @@ window.confirmar = async function(){
 /* ══ NAVEGAÇÃO DE STEPS ══ */
 window.goStep = function(n){
   _currentStep=n;
-  [1,2,3,4].forEach(function(i){
+  [1,2,3,4,5].forEach(function(i){
     var el=ge('step-'+i); if(el) el.classList.remove('active');
     var dot=ge('dot-'+i); if(dot){dot.classList.remove('active','done');
       if(i<n) dot.classList.add('done');
