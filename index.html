@@ -779,16 +779,19 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
     if(diasLivresPacote !== null && !diasLivresPacote.includes(diaSem)){
       cur.setDate(cur.getDate()+1); continue;
     }
-
     regrasFilt.forEach(function(regra){
       var dias,hors;
       try{dias=Array.isArray(regra.dias_semana)?regra.dias_semana:JSON.parse(regra.dias_semana||'[]');
           hors=Array.isArray(regra.horarios)?regra.horarios:JSON.parse(regra.horarios||'[]');}
       catch(_){return;}
-      /* Se há dias livres por pacote, usa esses dias (ignora dias da regra de categoria)
-         Se não há, usa os dias da regra normalmente */
-      var diasPermitidos = diasLivresPacote !== null ? diasLivresPacote : dias.map(Number);
-      if(!diasPermitidos.includes(diaSem)) return;
+
+      /* Se há dias livres por pacote: usa esses dias (ignora dias_semana da regra)
+         Se não há: comportamento normal — respeita dias_semana da regra */
+      if(diasLivresPacote !== null){
+        if(!diasLivresPacote.includes(diaSem)) return;
+      } else {
+        if(!dias.map(Number).includes(diaSem)) return;
+      }
       hors.forEach(function(h){
         var hs=String(h).substring(0,5);
         var key=ds+'_'+hs;
