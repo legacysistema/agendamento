@@ -705,8 +705,8 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
   var rBloqRec   = await db.from('agenda_bloqueios_recorrentes').select('dias_semana,horarios_bloqueados,data_inicio,data_fim,categoria,pacote,pacote_nome,pacote_id,ativo').eq('ativo',true).then(function(r){return r.data||[];}).catch(function(){return [];});
   var rAgendados = await db.from('agendamentos_clientes').select('data,horario,status').gte('data',hojeStr).lte('data',fimStr).neq('status','cancelado').then(function(r){return r.data||[];}).catch(function(){return [];});
 
-  /* Filtra regras pela categoria */
-  var regrasFilt = filtrarRegras(rRegras, categoria);
+  /* Filtra regras: prioridade pacote > categoria */
+  var regrasFilt = filtrarRegras(rRegras, categoria, pacoteNome);
 
   /* Conjuntos de bloqueio */
   var excSet={};
@@ -784,12 +784,23 @@ async function getDisponibilidade(periodo, categoria, pacoteNome){
   return slots;
 }
 
-function filtrarRegras(regras, categoria){
+function filtrarRegras(regras, categoria, pacoteNome){
   if(!regras.length) return [];
+
+  /* ── PRIORIDADE 1: regra com tipo === nome exato do pacote ── */
+  if(pacoteNome){
+    var pn = normStr(pacoteNome);
+    var porPacote = regras.filter(function(r){ return normStr(r.tipo) === pn; });
+    if(porPacote.length) return porPacote;
+  }
+
+  /* ── PRIORIDADE 2: regra com tipo === categoria exata ── */
   if(!categoria) return regras;
-  var cn=normStr(categoria);
-  var exact=regras.filter(function(r){return normStr(r.tipo)===cn;});
+  var cn = normStr(categoria);
+  var exact = regras.filter(function(r){ return normStr(r.tipo) === cn; });
   if(exact.length) return exact;
+
+  /* ── PRIORIDADE 3: match parcial por categoria (fallback) ── */
   var cnIsEnsaio=cn.includes('ensaio')||cn.includes('familia')||cn.includes('teen')||cn.includes('adulto')||cn.includes('profissional')||cn.includes('infantil');
   var cnIsEvento=cn.includes('evento')||cn.includes('aniversario')||cn.includes('debutante')||cn.includes('tradicional')||cn.includes('festare');
   var partial=regras.filter(function(r){
