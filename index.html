@@ -322,58 +322,16 @@ body::after{
 /* ── TIPO AGENDAMENTO ── */
 .ag-tipo-sel{display:flex;gap:8px;margin-bottom:18px;}
 .ag-tipo-opt{
-  flex:1;padding:14px 10px 12px;border-radius:14px;border:1.5px solid var(--border2);
+  flex:1;padding:12px 10px;border-radius:12px;border:1.5px solid var(--border2);
   background:rgba(255,255,255,.02);cursor:pointer;text-align:center;
-  transition:all .22s;position:relative;overflow:hidden;
+  transition:all .2s;
 }
-
-/* ── NOVO AGENDAMENTO: tema dourado/âmbar ── */
-#tipo-agendamento{
-  border-color:rgba(212,168,67,.22);
-  background:rgba(212,168,67,.04);
-}
-#tipo-agendamento .ag-tipo-badge{
-  display:inline-flex;align-items:center;gap:4px;
-  background:rgba(212,168,67,.14);border:1px solid rgba(212,168,67,.32);
-  color:var(--gold);border-radius:20px;font-size:9px;font-weight:700;
-  letter-spacing:.6px;text-transform:uppercase;padding:2px 8px;margin-bottom:8px;
-  font-family:var(--font-ui);
-}
-#tipo-agendamento i{font-size:20px;color:rgba(212,168,67,.5);display:block;margin-bottom:6px;}
-#tipo-agendamento span{font-size:12px;font-weight:700;color:rgba(212,168,67,.75);font-family:var(--font-ui);display:block;line-height:1.3;}
-#tipo-agendamento small{font-size:10px;color:rgba(212,168,67,.45);display:block;margin-top:2px;}
-#tipo-agendamento.selected{
-  border-color:var(--gold);
-  background:rgba(212,168,67,.11);
-  box-shadow:0 0 20px rgba(212,168,67,.15),inset 0 0 12px rgba(212,168,67,.05);
-}
-#tipo-agendamento.selected i{color:var(--gold);}
-#tipo-agendamento.selected span{color:var(--gold2);}
-#tipo-agendamento.selected .ag-tipo-badge{background:rgba(212,168,67,.25);border-color:var(--gold);color:var(--gold2);}
-
-/* ── REAGENDAMENTO: tema ciano/azul ── */
-#tipo-reagendamento{
-  border-color:rgba(0,217,245,.18);
-  background:rgba(0,217,245,.03);
-}
-#tipo-reagendamento .ag-tipo-badge{
-  display:inline-flex;align-items:center;gap:4px;
-  background:rgba(0,217,245,.11);border:1px solid rgba(0,217,245,.28);
-  color:var(--cyan);border-radius:20px;font-size:9px;font-weight:700;
-  letter-spacing:.6px;text-transform:uppercase;padding:2px 8px;margin-bottom:8px;
-  font-family:var(--font-ui);
-}
-#tipo-reagendamento i{font-size:20px;color:rgba(0,217,245,.45);display:block;margin-bottom:6px;}
-#tipo-reagendamento span{font-size:12px;font-weight:700;color:rgba(0,217,245,.7);font-family:var(--font-ui);display:block;line-height:1.3;}
-#tipo-reagendamento small{font-size:10px;color:rgba(0,217,245,.4);display:block;margin-top:2px;}
-#tipo-reagendamento.selected{
-  border-color:var(--cyan);
-  background:rgba(0,217,245,.09);
-  box-shadow:0 0 20px rgba(0,217,245,.12),inset 0 0 12px rgba(0,217,245,.04);
-}
-#tipo-reagendamento.selected i{color:var(--cyan);}
-#tipo-reagendamento.selected span{color:#5ee8fa;}
-#tipo-reagendamento.selected .ag-tipo-badge{background:rgba(0,217,245,.2);border-color:var(--cyan);color:#5ee8fa;}
+.ag-tipo-opt.selected{border-color:var(--gold);background:rgba(212,168,67,.08);}
+.ag-tipo-opt i{font-size:16px;color:var(--muted);display:block;margin-bottom:5px;}
+.ag-tipo-opt.selected i{color:var(--gold);}
+.ag-tipo-opt span{font-size:12px;font-weight:600;color:var(--muted);font-family:var(--font-ui);display:block;line-height:1.3;}
+.ag-tipo-opt.selected span{color:var(--gold2);}
+.ag-tipo-opt small{font-size:10px;color:var(--muted);opacity:.6;}
 
 /* ── MODAL PIX ── */
 #modal-pix{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
@@ -602,13 +560,11 @@ body::after{
             <label class="ag-label"><i class="fas fa-sliders" style="color:var(--gold);"></i> Tipo de agendamento *</label>
             <div class="ag-tipo-sel">
               <div class="ag-tipo-opt" id="tipo-agendamento" onclick="selecionarTipo('agendamento')">
-                <div class="ag-tipo-badge"><i class="fas fa-bolt"></i> Novo</div>
                 <i class="fas fa-calendar-plus"></i>
                 <span>Novo Agendamento</span>
                 <small>Pagamento via PIX</small>
               </div>
               <div class="ag-tipo-opt" id="tipo-reagendamento" onclick="selecionarTipo('reagendamento')">
-                <div class="ag-tipo-badge"><i class="fas fa-rotate"></i> Retorno</div>
                 <i class="fas fa-calendar-check"></i>
                 <span>Reagendamento</span>
                 <small>Já realizado antes</small>
