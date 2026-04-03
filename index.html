@@ -319,6 +319,82 @@ body::after{
 /* ── FOOTER ── */
 .footer{text-align:center;padding:18px;font-size:11px;color:var(--muted);position:relative;z-index:1;letter-spacing:.5px;font-family:var(--font-ui);}
 
+/* ── TIPO AGENDAMENTO ── */
+.ag-tipo-sel{display:flex;gap:8px;margin-bottom:18px;}
+.ag-tipo-opt{
+  flex:1;padding:12px 10px;border-radius:12px;border:1.5px solid var(--border2);
+  background:rgba(255,255,255,.02);cursor:pointer;text-align:center;
+  transition:all .2s;
+}
+.ag-tipo-opt.selected{border-color:var(--gold);background:rgba(212,168,67,.08);}
+.ag-tipo-opt i{font-size:16px;color:var(--muted);display:block;margin-bottom:5px;}
+.ag-tipo-opt.selected i{color:var(--gold);}
+.ag-tipo-opt span{font-size:12px;font-weight:600;color:var(--muted);font-family:var(--font-ui);display:block;line-height:1.3;}
+.ag-tipo-opt.selected span{color:var(--gold2);}
+.ag-tipo-opt small{font-size:10px;color:var(--muted);opacity:.6;}
+
+/* ── MODAL PIX ── */
+#modal-pix{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
+.pix-modal{
+  background:var(--bg3);border:1px solid rgba(212,168,67,.22);
+  border-radius:22px 22px 0 0;width:100%;max-width:560px;
+  padding:24px 20px calc(24px + var(--safe-bottom));
+  animation:slideUp .28s ease;
+}
+.pix-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin:0 auto 20px;}
+.pix-header{text-align:center;margin-bottom:20px;}
+.pix-icon{font-size:36px;color:var(--gold);margin-bottom:8px;display:block;}
+.pix-title{font-family:var(--font-serif);font-size:20px;color:#fff;margin-bottom:4px;}
+.pix-sub{font-size:12px;color:var(--muted);}
+.pix-valor-box{
+  padding:14px 16px;border-radius:13px;text-align:center;margin-bottom:14px;
+  background:rgba(212,168,67,.07);border:1px solid rgba(212,168,67,.2);
+}
+.pix-valor-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--font-ui);margin-bottom:4px;}
+.pix-valor-num{font-size:26px;font-weight:800;color:var(--gold2);font-family:var(--font-ui);}
+.pix-chave-box{
+  padding:13px 16px;border-radius:12px;margin-bottom:12px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border2);
+  display:flex;align-items:center;gap:10px;
+}
+.pix-chave-icon{font-size:18px;color:var(--gold);flex-shrink:0;}
+.pix-chave-info{flex:1;min-width:0;}
+.pix-chave-lbl{font-size:10px;color:var(--muted);font-family:var(--font-ui);font-weight:600;letter-spacing:.8px;text-transform:uppercase;}
+.pix-chave-val{font-size:15px;font-weight:700;color:#fff;font-family:var(--font-ui);}
+.pix-avisos{
+  padding:11px 14px;border-radius:11px;margin-bottom:16px;
+  background:rgba(255,160,50,.05);border:1px solid rgba(255,160,50,.18);
+  font-size:12px;color:var(--muted);line-height:1.7;
+}
+.pix-avisos i{color:#ffa032;margin-right:4px;}
+.pix-btns{display:flex;gap:10px;margin-bottom:8px;}
+.btn-copiar-pix{
+  flex:1;padding:13px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(212,168,67,.18),rgba(212,168,67,.07));
+  border:1px solid rgba(212,168,67,.35);color:var(--gold);
+  font-size:14px;font-weight:700;font-family:var(--font-ui);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;
+}
+.btn-copiar-pix:active{background:rgba(212,168,67,.25);}
+.btn-ja-paguei{
+  flex:1;padding:13px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(0,228,154,.18),rgba(0,228,154,.07));
+  border:1px solid rgba(0,228,154,.35);color:var(--green);
+  font-size:14px;font-weight:700;font-family:var(--font-ui);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;
+}
+.btn-ja-paguei:active{background:rgba(0,228,154,.25);}
+.btn-pix-fechar{
+  width:100%;padding:11px;border-radius:11px;
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  font-size:13px;font-family:var(--font-ui);cursor:pointer;margin-top:4px;
+}
+.pix-pago-badge{
+  display:none;text-align:center;padding:10px;border-radius:10px;margin-bottom:10px;
+  background:rgba(0,228,154,.08);border:1px solid rgba(0,228,154,.25);
+  font-size:13px;font-weight:600;color:var(--green);font-family:var(--font-ui);
+}
+
 @media(max-width:420px){.ag-inner{padding:22px 16px 26px;}.header{padding:0 16px;}}
 </style>
 </head>
@@ -479,7 +555,29 @@ body::after{
 
           <span id="ag-conf-msg" style="display:block;margin-bottom:10px;font-size:13px;color:var(--muted);min-height:18px;"></span>
 
-          <button class="ag-btn-confirmar" id="btn-confirmar" onclick="confirmar()">
+          <!-- TIPO DE AGENDAMENTO -->
+          <div style="margin-bottom:16px;">
+            <label class="ag-label"><i class="fas fa-sliders" style="color:var(--gold);"></i> Tipo de agendamento *</label>
+            <div class="ag-tipo-sel">
+              <div class="ag-tipo-opt" id="tipo-agendamento" onclick="selecionarTipo('agendamento')">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Novo Agendamento</span>
+                <small>Pagamento via PIX</small>
+              </div>
+              <div class="ag-tipo-opt" id="tipo-reagendamento" onclick="selecionarTipo('reagendamento')">
+                <i class="fas fa-calendar-check"></i>
+                <span>Reagendamento</span>
+                <small>Já realizado antes</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badge "PIX confirmado" -->
+          <div class="pix-pago-badge" id="pix-pago-badge">
+            <i class="fas fa-circle-check"></i> Pagamento PIX confirmado — pode prosseguir!
+          </div>
+
+          <button class="ag-btn-confirmar" id="btn-confirmar" onclick="confirmar()" disabled>
             <i class="fas fa-calendar-check"></i> Confirmar Agendamento
           </button>
 
@@ -502,6 +600,44 @@ body::after{
               Buscando pacotes…
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- MODAL PIX -->
+      <div id="modal-pix" onclick="fecharModalPixSeFora(event)">
+        <div class="pix-modal" id="pix-modal-inner">
+          <div class="pix-handle"></div>
+          <div class="pix-header">
+            <span class="pix-icon"><i class="fas fa-qrcode"></i></span>
+            <div class="pix-title">Finalize sua reserva via PIX</div>
+            <div class="pix-sub">Realize o pagamento para garantir seu horário</div>
+          </div>
+          <div class="pix-valor-box">
+            <div class="pix-valor-label">Valor da reserva</div>
+            <div class="pix-valor-num" id="pix-valor-display">—</div>
+          </div>
+          <div class="pix-chave-box">
+            <div class="pix-chave-icon"><i class="fas fa-mobile-alt"></i></div>
+            <div class="pix-chave-info">
+              <div class="pix-chave-lbl">Chave PIX · Telefone</div>
+              <div class="pix-chave-val" id="pix-chave-val">22992497662</div>
+            </div>
+          </div>
+          <div class="pix-avisos">
+            <div><i class="fas fa-clock"></i> Reservas sem envio de comprovante <strong style="color:#fff;">expiram em 1h</strong></div>
+            <div><i class="fas fa-mobile-alt"></i> PIX telefone: <strong style="color:#fff;">22992497662</strong></div>
+          </div>
+          <div class="pix-btns">
+            <button class="btn-copiar-pix" id="btn-copiar-pix" onclick="copiarChavePix()">
+              <i class="fas fa-copy"></i> Copiar PIX
+            </button>
+            <button class="btn-ja-paguei" onclick="confirmarPagamento()">
+              <i class="fas fa-check"></i> Já paguei
+            </button>
+          </div>
+          <button class="btn-pix-fechar" onclick="fecharModalPix()">
+            <i class="fas fa-arrow-left"></i> Voltar e escolher outro horário
+          </button>
         </div>
       </div>
 
@@ -581,6 +717,11 @@ var _calMonth  = 0;
 var _timerIntvl = null;
 var _expiresAt  = null;
 var _currentStep = 1;
+
+/* ══ ESTADO PIX / TIPO ══ */
+var pagamentoConfirmado = false;
+var tipoAgendamento     = null;   // 'agendamento' | 'reagendamento'
+var _pacotePreco        = 0;      // valor em R$ do pacote selecionado
 
 /* ══ HELPERS ══ */
 function ge(id){ return document.getElementById(id); }
@@ -727,7 +868,7 @@ window.abrirModalPacotes = function(){
       body.innerHTML = '<div class="ag-pacotes-grid">'+produtos.map(function(p){
         var icon = PACOTE_ICONS[p.nome]||PACOTE_ICONS[p.subcategoria]||'fas fa-camera';
         var preco = p.preco>0 ? '<span style="font-size:12px;color:var(--gold);font-weight:600;">R$ '+Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>' : '';
-        return '<div class="ag-pac-card" onclick="selecionarPacoteModal(\''+p.id+'\',\''+p.nome.replace(/'/g,"\\'")+'\')">'
+        return '<div class="ag-pac-card" onclick="selecionarPacoteModal(\''+p.id+'\',\''+p.nome.replace(/'/g,"\\'")+'\','+Number(p.preco||0)+')">'
           +'<div class="ag-pac-icon"><i class="'+icon+'"></i></div>'
           +'<div style="flex:1;min-width:0;">'
           +'<div class="ag-pac-name">'+p.nome+'</div>'
@@ -742,9 +883,10 @@ window.abrirModalPacotes = function(){
     });
 };
 
-window.selecionarPacoteModal = function(id, nome){
-  _pacoteSel = nome;
-  _pacoteId  = id;
+window.selecionarPacoteModal = function(id, nome, preco){
+  _pacoteSel  = nome;
+  _pacoteId   = id;
+  _pacotePreco = Number(preco)||0;
   fecharModal();
   goStep2();
 };
@@ -1192,6 +1334,89 @@ window.goStep3 = function(){
   var dtStr=dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
   txt('res-data', dtStr.charAt(0).toUpperCase()+dtStr.slice(1));
   txt('res-hora',_horaSel);
+  /* Reset estado PIX/tipo */
+  pagamentoConfirmado = false;
+  tipoAgendamento     = null;
+  document.querySelectorAll('.ag-tipo-opt').forEach(function(o){o.classList.remove('selected');});
+  ge('pix-pago-badge').style.display = 'none';
+  ge('btn-confirmar').disabled = true;
+};
+
+/* ══ TIPO DE AGENDAMENTO ══ */
+window.selecionarTipo = function(tipo){
+  tipoAgendamento = tipo;
+  document.querySelectorAll('.ag-tipo-opt').forEach(function(o){o.classList.remove('selected');});
+  ge('tipo-'+tipo).classList.add('selected');
+
+  if(tipo === 'reagendamento'){
+    /* Reagendamento: habilita direto */
+    pagamentoConfirmado = true;
+    ge('pix-pago-badge').style.display = 'none';
+    ge('btn-confirmar').disabled = false;
+  } else {
+    /* Agendamento: exige PIX */
+    if(!pagamentoConfirmado){
+      ge('btn-confirmar').disabled = true;
+      ge('pix-pago-badge').style.display = 'none';
+      abrirModalPix();
+    }
+  }
+};
+
+/* ══ MODAL PIX ══ */
+window.abrirModalPix = function(){
+  /* Preenche valor */
+  var valorTxt = _pacotePreco > 0
+    ? 'R$ '+Number(_pacotePreco).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
+    : 'Consultar com o fotógrafo';
+  txt('pix-valor-display', valorTxt);
+  document.getElementById('modal-pix').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+window.fecharModalPix = function(){
+  document.getElementById('modal-pix').style.display = 'none';
+  document.body.style.overflow = '';
+  /* Se fechou sem pagar e tipo era agendamento, mantém botão bloqueado e desmarca tipo */
+  if(tipoAgendamento === 'agendamento' && !pagamentoConfirmado){
+    tipoAgendamento = null;
+    document.querySelectorAll('.ag-tipo-opt').forEach(function(o){o.classList.remove('selected');});
+    ge('btn-confirmar').disabled = true;
+  }
+};
+
+window.fecharModalPixSeFora = function(e){
+  if(e.target === document.getElementById('modal-pix')) fecharModalPix();
+};
+
+window.copiarChavePix = function(){
+  var chave = '22992497662';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(chave).then(function(){
+      var btn = ge('btn-copiar-pix');
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+      setTimeout(function(){ btn.innerHTML = orig; }, 2000);
+    }).catch(function(){ fallbackCopy(chave); });
+  } else { fallbackCopy(chave); }
+};
+
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); } catch(e){}
+  document.body.removeChild(ta);
+  var btn = ge('btn-copiar-pix');
+  if(btn){ var orig=btn.innerHTML; btn.innerHTML='<i class="fas fa-check"></i> Copiado!'; setTimeout(function(){btn.innerHTML=orig;},2000); }
+}
+
+window.confirmarPagamento = function(){
+  pagamentoConfirmado = true;
+  document.getElementById('modal-pix').style.display = 'none';
+  document.body.style.overflow = '';
+  ge('btn-confirmar').disabled = false;
+  ge('pix-pago-badge').style.display = 'block';
 };
 
 /* ══ CONFIRMAR ══ */
@@ -1203,12 +1428,19 @@ window.confirmar = async function(){
 
   if(!nome){txt('ag-conf-msg','⚠️ Informe seu nome completo.');return;}
   if(!wpp||wpp.replace(/\D/g,'').length<10){txt('ag-conf-msg','⚠️ Informe um WhatsApp válido com DDD.');return;}
+  if(!tipoAgendamento){txt('ag-conf-msg','⚠️ Selecione o tipo de agendamento.');return;}
+  if(tipoAgendamento==='agendamento'&&!pagamentoConfirmado){txt('ag-conf-msg','⚠️ Confirme o pagamento PIX antes de prosseguir.');return;}
   txt('ag-conf-msg','');
 
   var btn=ge('btn-confirmar');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Salvando…';
 
   try {
+    var statusFinal = tipoAgendamento==='reagendamento' ? 'aguardando_comprovante' : 'aguardando_comprovante';
+    var obsExtra = (obs||'');
+    if(tipoAgendamento) obsExtra += (obsExtra?' | ':'')+'Tipo: '+tipoAgendamento;
+    if(_linkData.observacao) obsExtra += ' | Admin: '+_linkData.observacao;
+
     var r1=await db.from('agendamentos_clientes').insert({
       nome: nome,
       whatsapp: wpp.replace(/\D/g,''),
@@ -1217,8 +1449,8 @@ window.confirmar = async function(){
       produto_categoria: _catSel,
       data: _dataSel,
       horario: _horaSel+':00',
-      status: 'aguardando_comprovante',
-      observacoes_adm: (obs||'')+(_linkData.observacao?' | Admin: '+_linkData.observacao:''),
+      status: statusFinal,
+      observacoes_adm: obsExtra,
       link_token: _token,
     });
     if(r1.error) throw r1.error;
