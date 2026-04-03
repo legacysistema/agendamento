@@ -403,6 +403,7 @@ body::after{
 .pix-modal{
   background:var(--bg3);border:1px solid rgba(212,168,67,.22);
   border-radius:22px 22px 0 0;width:100%;max-width:560px;
+  max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:24px 20px calc(24px + var(--safe-bottom));
   animation:slideUp .28s ease;
 }
@@ -680,7 +681,7 @@ body::after{
             <div class="pix-sub">Realize o pagamento para garantir seu horário</div>
           </div>
           <div class="pix-valor-box">
-            <div class="pix-valor-label">Valor do Pacote</div>
+            <div class="pix-valor-label">Valor da reserva</div>
             <div class="pix-valor-num" id="pix-valor-display">—</div>
           </div>
           <div class="pix-chave-box">
@@ -694,7 +695,7 @@ body::after{
             <div><i class="fas fa-clock"></i> Reservas sem envio de comprovante <strong style="color:#fff;">EXPIRAM em 1h</strong></div>
             <div><i class="fa-brands fa-pix"></i> Sinal de <strong style="color:#fff;">R$ 50 via Pix</strong> para reserva. Restante no dia.</div>
             <div><i class="fas fa-fire"></i> Vagas limitadas. <strong>Horários podem ser preenchidos rapidamente.</strong></div>
-            <div><i class="fas fa-mobile-alt"></i> PIX telefone: <strong style="color:#fff;">22992497662</strong></div>
+            <div><i class="fas fa-mobile-alt"></i> PIX telefone: <strong style="color:#fff;">(22)99249-7662 Rodrigo Costa de Moraes - Nubank</strong></div>
           </div>
           <div class="pix-btns">
             <button class="btn-copiar-pix" id="btn-copiar-pix" onclick="copiarChavePix()">
