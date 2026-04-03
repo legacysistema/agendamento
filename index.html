@@ -399,14 +399,16 @@ body::after{
 .ag-tipo-opt.tipo-retorno.selected span{color:#7ef5ff;}
 
 /* ── MODAL PIX ── */
-#modal-pix{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
+#modal-pix{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;overflow:hidden;}
 .pix-modal{
   background:var(--bg3);border:1px solid rgba(212,168,67,.22);
   border-radius:22px 22px 0 0;width:100%;max-width:560px;
-  max-height:92dvh;max-height:92vh;
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  max-height:88vh;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
   padding:24px 20px calc(24px + var(--safe-bottom));
   animation:slideUp .28s ease;
+  flex-shrink:0;
 }
 .pix-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin:0 auto 20px;}
 .pix-header{text-align:center;margin-bottom:20px;}
