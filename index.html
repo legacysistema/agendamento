@@ -320,18 +320,83 @@ body::after{
 .footer{text-align:center;padding:18px;font-size:11px;color:var(--muted);position:relative;z-index:1;letter-spacing:.5px;font-family:var(--font-ui);}
 
 /* ── TIPO AGENDAMENTO ── */
-.ag-tipo-sel{display:flex;gap:8px;margin-bottom:18px;}
+.ag-tipo-sel{display:flex;gap:10px;margin-bottom:18px;}
+
+/* BASE COMUM */
 .ag-tipo-opt{
-  flex:1;padding:12px 10px;border-radius:12px;border:1.5px solid var(--border2);
-  background:rgba(255,255,255,.02);cursor:pointer;text-align:center;
-  transition:all .2s;
+  flex:1;padding:14px 10px 12px;border-radius:14px;cursor:pointer;text-align:center;
+  transition:all .22s;position:relative;overflow:hidden;
 }
-.ag-tipo-opt.selected{border-color:var(--gold);background:rgba(212,168,67,.08);}
-.ag-tipo-opt i{font-size:16px;color:var(--muted);display:block;margin-bottom:5px;}
-.ag-tipo-opt.selected i{color:var(--gold);}
-.ag-tipo-opt span{font-size:12px;font-weight:600;color:var(--muted);font-family:var(--font-ui);display:block;line-height:1.3;}
-.ag-tipo-opt.selected span{color:var(--gold2);}
-.ag-tipo-opt small{font-size:10px;color:var(--muted);opacity:.6;}
+.ag-tipo-opt i{font-size:18px;display:block;margin-bottom:6px;transition:color .2s;}
+.ag-tipo-opt span{font-size:12px;font-weight:700;font-family:var(--font-ui);display:block;line-height:1.3;transition:color .2s;}
+.ag-tipo-opt small{font-size:10px;opacity:.55;display:block;margin-top:2px;}
+
+/* ── BADGE BASE ── */
+.badge-tipo{
+  display:inline-block;font-size:8px;font-weight:800;letter-spacing:1.2px;
+  text-transform:uppercase;border-radius:5px;padding:2px 6px;margin-bottom:7px;
+  font-family:var(--font-ui);line-height:1;
+}
+
+/* ══ NOVO AGENDAMENTO (dourado) ══ */
+.ag-tipo-opt.tipo-novo{
+  border:1.5px solid rgba(212,168,67,.28);
+  background:rgba(212,168,67,.05);
+}
+.ag-tipo-opt.tipo-novo .badge-tipo{
+  background:rgba(212,168,67,.18);color:var(--gold2);border:1px solid rgba(212,168,67,.3);
+}
+.ag-tipo-opt.tipo-novo i{color:rgba(212,168,67,.55);}
+.ag-tipo-opt.tipo-novo span{color:rgba(212,168,67,.7);}
+.ag-tipo-opt.tipo-novo small{color:var(--muted);}
+
+/* Hover Novo */
+.ag-tipo-opt.tipo-novo:hover{
+  border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.09);
+}
+.ag-tipo-opt.tipo-novo:active{background:rgba(212,168,67,.14);}
+
+/* Selecionado Novo */
+.ag-tipo-opt.tipo-novo.selected{
+  border-color:var(--gold);
+  background:rgba(212,168,67,.12);
+  box-shadow:0 0 0 1px rgba(212,168,67,.18), 0 0 22px rgba(212,168,67,.18), 0 0 48px rgba(212,168,67,.06);
+}
+.ag-tipo-opt.tipo-novo.selected .badge-tipo{
+  background:var(--gold);color:#07070c;border-color:var(--gold2);
+}
+.ag-tipo-opt.tipo-novo.selected i{color:var(--gold2);}
+.ag-tipo-opt.tipo-novo.selected span{color:var(--gold2);}
+
+/* ══ REAGENDAMENTO (cyan) ══ */
+.ag-tipo-opt.tipo-retorno{
+  border:1.5px solid rgba(0,217,245,.18);
+  background:rgba(0,217,245,.03);
+}
+.ag-tipo-opt.tipo-retorno .badge-tipo{
+  background:rgba(0,217,245,.12);color:var(--cyan);border:1px solid rgba(0,217,245,.22);
+}
+.ag-tipo-opt.tipo-retorno i{color:rgba(0,217,245,.45);}
+.ag-tipo-opt.tipo-retorno span{color:rgba(0,217,245,.6);}
+.ag-tipo-opt.tipo-retorno small{color:var(--muted);}
+
+/* Hover Reagendamento */
+.ag-tipo-opt.tipo-retorno:hover{
+  border-color:rgba(0,217,245,.4);background:rgba(0,217,245,.07);
+}
+.ag-tipo-opt.tipo-retorno:active{background:rgba(0,217,245,.12);}
+
+/* Selecionado Reagendamento */
+.ag-tipo-opt.tipo-retorno.selected{
+  border-color:var(--cyan);
+  background:rgba(0,217,245,.1);
+  box-shadow:0 0 0 1px rgba(0,217,245,.15), 0 0 22px rgba(0,217,245,.15), 0 0 48px rgba(0,217,245,.05);
+}
+.ag-tipo-opt.tipo-retorno.selected .badge-tipo{
+  background:var(--cyan);color:#07070c;border-color:#7ef5ff;
+}
+.ag-tipo-opt.tipo-retorno.selected i{color:var(--cyan);}
+.ag-tipo-opt.tipo-retorno.selected span{color:#7ef5ff;}
 
 /* ── MODAL PIX ── */
 #modal-pix{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
@@ -559,12 +624,14 @@ body::after{
           <div style="margin-bottom:16px;">
             <label class="ag-label"><i class="fas fa-sliders" style="color:var(--gold);"></i> Tipo de agendamento *</label>
             <div class="ag-tipo-sel">
-              <div class="ag-tipo-opt" id="tipo-agendamento" onclick="selecionarTipo('agendamento')">
+              <div class="ag-tipo-opt tipo-novo" id="tipo-agendamento" onclick="selecionarTipo('agendamento')">
+                <span class="badge-tipo">NOVO</span>
                 <i class="fas fa-calendar-plus"></i>
                 <span>Novo Agendamento</span>
                 <small>Pagamento via PIX</small>
               </div>
-              <div class="ag-tipo-opt" id="tipo-reagendamento" onclick="selecionarTipo('reagendamento')">
+              <div class="ag-tipo-opt tipo-retorno" id="tipo-reagendamento" onclick="selecionarTipo('reagendamento')">
+                <span class="badge-tipo">RETORNO</span>
                 <i class="fas fa-calendar-check"></i>
                 <span>Reagendamento</span>
                 <small>Já realizado antes</small>
