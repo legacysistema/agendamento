@@ -403,7 +403,8 @@ body::after{
 .pix-modal{
   background:var(--bg3);border:1px solid rgba(212,168,67,.22);
   border-radius:22px 22px 0 0;width:100%;max-width:560px;
-  max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  max-height:92dvh;max-height:92vh;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:24px 20px calc(24px + var(--safe-bottom));
   animation:slideUp .28s ease;
 }
@@ -461,7 +462,34 @@ body::after{
   font-size:13px;font-weight:600;color:var(--green);font-family:var(--font-ui);
 }
 
-@media(max-width:420px){.ag-inner{padding:22px 16px 26px;}.header{padding:0 16px;}}
+@media(max-width:420px){
+  .ag-inner{padding:22px 16px 26px;}
+  .header{padding:0 16px;}
+  .pix-modal{padding:18px 16px calc(18px + var(--safe-bottom));}
+  .pix-handle{margin-bottom:14px;}
+  .pix-header{margin-bottom:12px;}
+  .pix-icon{font-size:28px;margin-bottom:6px;}
+  .pix-title{font-size:17px;}
+  .pix-valor-box{padding:10px 14px;margin-bottom:10px;}
+  .pix-valor-num{font-size:22px;}
+  .pix-chave-box{padding:10px 14px;margin-bottom:10px;}
+  .pix-avisos{padding:9px 12px;margin-bottom:12px;font-size:11px;}
+  .pix-btns{gap:8px;margin-bottom:6px;}
+  .btn-copiar-pix,.btn-ja-paguei{padding:11px;font-size:13px;}
+}
+@media(max-height:680px){
+  .pix-modal{padding-top:14px;}
+  .pix-handle{margin-bottom:10px;}
+  .pix-header{margin-bottom:10px;}
+  .pix-icon{font-size:24px;margin-bottom:4px;}
+  .pix-title{font-size:16px;}
+  .pix-sub{font-size:11px;}
+  .pix-valor-box{padding:8px 14px;margin-bottom:8px;}
+  .pix-valor-num{font-size:20px;}
+  .pix-chave-box{padding:9px 13px;margin-bottom:8px;}
+  .pix-avisos{padding:8px 11px;margin-bottom:10px;line-height:1.55;}
+  .pix-btns{margin-bottom:4px;}
+}
 </style>
 </head>
 <body>
@@ -692,10 +720,8 @@ body::after{
             </div>
           </div>
           <div class="pix-avisos">
-            <div><i class="fas fa-clock"></i> Reservas sem envio de comprovante <strong style="color:#fff;">EXPIRAM em 1h</strong></div>
-            <div><i class="fa-brands fa-pix"></i> Sinal de <strong style="color:#fff;">R$ 50 via Pix</strong> para reserva. Restante no dia.</div>
-            <div><i class="fas fa-fire"></i> Vagas limitadas. <strong>Horários podem ser preenchidos rapidamente.</strong></div>
-            <div><i class="fas fa-mobile-alt"></i> PIX telefone: <strong style="color:#fff;">(22)99249-7662 Rodrigo Costa de Moraes - Nubank</strong></div>
+            <div><i class="fas fa-clock"></i> Reservas sem envio de comprovante <strong style="color:#fff;">expiram em 1h</strong></div>
+            <div><i class="fas fa-mobile-alt"></i> PIX telefone: <strong style="color:#fff;">22992497662</strong></div>
           </div>
           <div class="pix-btns">
             <button class="btn-copiar-pix" id="btn-copiar-pix" onclick="copiarChavePix()">
