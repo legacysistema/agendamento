@@ -403,7 +403,8 @@ body::after{
 .pix-modal{
   background:var(--bg3);border:1px solid rgba(212,168,67,.22);
   border-radius:22px 22px 0 0;width:100%;max-width:560px;
-  max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  max-height:92dvh;max-height:92vh;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:24px 20px calc(24px + var(--safe-bottom));
   animation:slideUp .28s ease;
 }
@@ -461,7 +462,34 @@ body::after{
   font-size:13px;font-weight:600;color:var(--green);font-family:var(--font-ui);
 }
 
-@media(max-width:420px){.ag-inner{padding:22px 16px 26px;}.header{padding:0 16px;}}
+@media(max-width:420px){
+  .ag-inner{padding:22px 16px 26px;}
+  .header{padding:0 16px;}
+  .pix-modal{padding:18px 16px calc(18px + var(--safe-bottom));}
+  .pix-handle{margin-bottom:14px;}
+  .pix-header{margin-bottom:12px;}
+  .pix-icon{font-size:28px;margin-bottom:6px;}
+  .pix-title{font-size:17px;}
+  .pix-valor-box{padding:10px 14px;margin-bottom:10px;}
+  .pix-valor-num{font-size:22px;}
+  .pix-chave-box{padding:10px 14px;margin-bottom:10px;}
+  .pix-avisos{padding:9px 12px;margin-bottom:12px;font-size:11px;}
+  .pix-btns{gap:8px;margin-bottom:6px;}
+  .btn-copiar-pix,.btn-ja-paguei{padding:11px;font-size:13px;}
+}
+@media(max-height:680px){
+  .pix-modal{padding-top:14px;}
+  .pix-handle{margin-bottom:10px;}
+  .pix-header{margin-bottom:10px;}
+  .pix-icon{font-size:24px;margin-bottom:4px;}
+  .pix-title{font-size:16px;}
+  .pix-sub{font-size:11px;}
+  .pix-valor-box{padding:8px 14px;margin-bottom:8px;}
+  .pix-valor-num{font-size:20px;}
+  .pix-chave-box{padding:9px 13px;margin-bottom:8px;}
+  .pix-avisos{padding:8px 11px;margin-bottom:10px;line-height:1.55;}
+  .pix-btns{margin-bottom:4px;}
+}
 </style>
 </head>
 <body>
@@ -526,18 +554,14 @@ body::after{
           <div class="ag-step-dot" id="dot-4"></div>
         </div>
 
-        <!-- STEP 1: Pacotes -->
+        <!-- STEP 1: Categoria -->
         <div class="ag-step active" id="step-1">
           <div class="ag-eyebrow"><i class="fas fa-box"></i> Agendamento</div>
-          <div class="ag-title">Escolha o pacote</div>
-          <div id="ag-pacotes-loading" style="text-align:center;padding:28px 0;">
-            <div class="ag-loading-spin" style="width:32px;height:32px;margin:0 auto 12px;"></div>
-            <div class="ag-loading-text">Buscando pacotes…</div>
-          </div>
-          <div id="ag-pacotes-grid" class="ag-pacotes-grid" style="display:none;"></div>
+          <div class="ag-title">Escolha a categoria</div>
+          <div id="ag-pacotes-grid" class="ag-pacotes-grid"></div>
           <div class="ag-nav" style="margin-top:20px;">
-            <button class="ag-btn-next ok" id="btn-pac-next" style="display:none;" onclick="goStep2()">
-              <i class="fas fa-calendar"></i> Escolher Data
+            <button class="ag-btn-next" id="btn-pac-next" onclick="abrirModalPacotes()">
+              <i class="fas fa-box-open"></i> Ver Pacotes
             </button>
           </div>
         </div>
@@ -660,6 +684,21 @@ body::after{
 
       </div><!-- /ag-app -->
 
+      <!-- MODAL PACOTES -->
+      <div id="ag-modal-pacotes" style="display:none;" class="ag-modal-overlay" onclick="fecharModalSeFora(event)">
+        <div class="ag-modal">
+          <div class="ag-modal-handle"></div>
+          <div class="ag-modal-title" id="ag-modal-cat-nome">Pacotes</div>
+          <div class="ag-modal-sub">Escolha o pacote que deseja agendar</div>
+          <div id="ag-modal-body">
+            <div class="ag-modal-loading">
+              <div class="ag-loading-spin" style="width:28px;height:28px;border-width:2px;"></div>
+              Buscando pacotes…
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- MODAL PIX -->
       <div id="modal-pix" onclick="fecharModalPixSeFora(event)">
         <div class="pix-modal" id="pix-modal-inner">
@@ -681,10 +720,8 @@ body::after{
             </div>
           </div>
           <div class="pix-avisos">
-            <div><i class="fas fa-clock"></i> Reservas sem envio de comprovante <strong style="color:#fff;">EXPIRAM em 1h</strong></div>
-            <div><i class="fa-brands fa-pix"></i> Sinal de <strong style="color:#fff;">R$ 50 via Pix</strong> para reserva. Restante no dia.</div>
-            <div><i class="fas fa-fire"></i> Vagas limitadas. <strong>Horários podem ser preenchidos rapidamente.</strong></div>
-            <div><i class="fas fa-mobile-alt"></i> PIX telefone: <strong style="color:#fff;"> (22) 99249-7662  Rodrigo Costa de Moraes - Nubank</strong></div>
+            <div><i class="fas fa-clock"></i> Reservas sem envio de comprovante <strong style="color:#fff;">expiram em 1h</strong></div>
+            <div><i class="fas fa-mobile-alt"></i> PIX telefone: <strong style="color:#fff;">22992497662</strong></div>
           </div>
           <div class="pix-btns">
             <button class="btn-copiar-pix" id="btn-copiar-pix" onclick="copiarChavePix()">
@@ -828,7 +865,7 @@ async function _init(){
     hide('ag-loading');
     show('ag-app');
     iniciarTimer();
-    await renderPacotes();
+    renderPacotes();
 
     if(r.data.observacao){
       ge('ag-obs-adm').style.display='block';
@@ -868,110 +905,96 @@ function iniciarTimer(){
 }
 
 /* ══ STEP 1 — PACOTES ══ */
-async function renderPacotes(){
-  var grid    = ge('ag-pacotes-grid');
-  var loading = ge('ag-pacotes-loading');
-  var btnNext = ge('btn-pac-next');
+function renderPacotes(){
+  var pacotes = Array.isArray(_linkData.pacotes)?_linkData.pacotes:[];
+  var grid = ge('ag-pacotes-grid');
   if(!grid) return;
-
-  /* Monta lista de nomes/IDs do link para filtrar (se existir) */
-  var linkPacotes = Array.isArray(_linkData.pacotes) ? _linkData.pacotes : [];
-
-  /* Busca TODOS os pacotes ativos do banco */
-  var query = db.from('marketplace_produtos')
-    .select('id,nome,descricao,preco,categoria,subcategoria,status')
-    .eq('status','ativo')
-    .order('categoria')
-    .order('nome');
-
-  var r = await query.then(function(res){ return res; }).catch(function(){ return {data:[],error:true}; });
-  var todos = r.data || [];
-
-  /* Filtra pelos pacotes do link.
-     _linkData.pacotes contém CATEGORIAS (ex: "Smash the Cake").
-     Filtra por produto.categoria — match exato normalizado primeiro,
-     depois parcial. Se o link tem categorias configuradas, NUNCA
-     mostra todos — respeita sempre a restrição do admin. */
-  var produtos = todos;
-  if(linkPacotes.length){
-    var cats = linkPacotes.map(function(p){
-      var raw = (typeof p==='object'&&p!==null)?(p.nome||p.name||String(p)):String(p);
-      return normStr(PACOTE_MAP[raw] || raw);
-    });
-
-    /* 1ª tentativa: match exato de categoria */
-    var filtrado = todos.filter(function(p){
-      var pc = normStr(p.categoria||'');
-      return cats.some(function(c){ return c === pc; });
-    });
-
-    /* 2ª tentativa: match exato de nome do produto */
-    if(!filtrado.length){
-      filtrado = todos.filter(function(p){
-        var pn = normStr(p.nome||'');
-        return cats.some(function(c){ return c === pn; });
-      });
-    }
-
-    /* 3ª tentativa: match parcial de categoria */
-    if(!filtrado.length){
-      filtrado = todos.filter(function(p){
-        var pc = normStr(p.categoria||'');
-        return cats.some(function(c){ return c && (pc.includes(c) || c.includes(pc)); });
-      });
-    }
-
-    /* 4ª tentativa: match parcial de nome do produto */
-    if(!filtrado.length){
-      filtrado = todos.filter(function(p){
-        var pn = normStr(p.nome||'');
-        return cats.some(function(c){ return c && (pn.includes(c) || c.includes(pn)); });
-      });
-    }
-
-    /* SEMPRE respeita a configuração do admin:
-       se linkPacotes foi definido, usa filtrado (mesmo vazio)
-       — NUNCA faz fallback para todos os pacotes. */
-    produtos = filtrado;
-  }
-
-  if(loading) loading.style.display = 'none';
-  grid.style.display = 'block';
-
-  if(!produtos.length){
-    var emptyMsg = linkPacotes.length
-      ? 'Nenhum pacote encontrado para esta configuração.<br><small style="opacity:.6;">Entre em contato com o fotógrafo.</small>'
-      : 'Nenhum pacote disponível no momento.';
-    grid.innerHTML='<div class="ag-modal-empty"><i class="fas fa-box-open"></i>'+emptyMsg+'</div>';
+  if(!pacotes.length){
+    grid.innerHTML='<p style="color:var(--muted);font-size:13px;">Nenhuma categoria disponível neste link.</p>';
     return;
   }
+  /* Deduz categorias únicas dos pacotes do link */
+  var categorias = [];
+  var vistas = {};
+  pacotes.forEach(function(p){
+    var nome = (typeof p==='object'&&p!==null) ? (p.nome||p.name||String(p)) : String(p);
+    var cat  = PACOTE_MAP[nome] || nome;
+    if(!vistas[cat]){ vistas[cat]=true; categorias.push({nome:nome, cat:cat}); }
+  });
 
-  grid.innerHTML = produtos.map(function(p){
-    var icon  = PACOTE_ICONS[p.nome]||PACOTE_ICONS[p.subcategoria]||PACOTE_ICONS[p.categoria]||'fas fa-camera';
-    var preco = p.preco>0
-      ? '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px;">R$ '+Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>'
-      : '';
-    return '<div class="ag-pac-card" id="pac-'+p.id+'" onclick="selecionarPacote(\''+p.id+'\',\''+p.nome.replace(/'/g,"\\'")+'\',\''+String(p.categoria||'').replace(/'/g,"\\'")+'\','+Number(p.preco||0)+')">'
+  grid.innerHTML = categorias.map(function(c){
+    var icon = PACOTE_ICONS[c.nome]||PACOTE_ICONS[c.cat]||'fas fa-camera';
+    return '<div class="ag-pac-card" id="cat-'+c.cat.replace(/[^a-z0-9]/gi,'_')+'" onclick="selecionarCategoria(\''+c.nome+'\',\''+c.cat+'\')">'
       +'<div class="ag-pac-icon"><i class="'+icon+'"></i></div>'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div class="ag-pac-name">'+p.nome+'</div>'
-      +preco
-      +'</div>'
+      +'<div class="ag-pac-name">'+c.cat+'</div>'
       +'<div class="ag-pac-check"><i class="fas fa-check"></i></div>'
       +'</div>';
   }).join('');
 }
 
-window.selecionarPacote = function(id, nome, cat, preco){
-  _pacoteSel   = nome;
-  _catSel      = cat;
-  _pacoteId    = id;
-  _pacotePreco = Number(preco)||0;
-  document.querySelectorAll('.ag-pac-card').forEach(function(c){ c.classList.remove('chosen'); });
-  var card = ge('pac-'+id);
+window.selecionarCategoria = function(nome, cat){
+  _pacoteSel = null;
+  _catSel    = cat;
+  _pacoteId  = null;
+  document.querySelectorAll('.ag-pac-card').forEach(function(c){c.classList.remove('chosen');});
+  var card = ge('cat-'+cat.replace(/[^a-z0-9]/gi,'_'));
   if(card) card.classList.add('chosen');
-  var btn = ge('btn-pac-next');
-  if(btn) btn.style.display = 'flex';
+  ge('btn-pac-next').classList.add('ok');
+};
+
+window.abrirModalPacotes = function(){
+  if(!_catSel) return;
+  var modal = ge('ag-modal-pacotes');
+  var body  = ge('ag-modal-body');
+  txt('ag-modal-cat-nome', _catSel);
+  body.innerHTML = '<div class="ag-modal-loading"><div class="ag-loading-spin" style="width:28px;height:28px;border-width:2px;"></div>Buscando pacotes…</div>';
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  db.from('marketplace_produtos')
+    .select('id,nome,descricao,preco,categoria,subcategoria,status')
+    .eq('categoria', _catSel)
+    .eq('status','ativo')
+    .then(function(r){
+      var produtos = r.data||[];
+      if(!produtos.length){
+        body.innerHTML = '<div class="ag-modal-empty"><i class="fas fa-box-open"></i>Nenhum pacote encontrado para esta categoria.</div>';
+        return;
+      }
+      body.innerHTML = '<div class="ag-pacotes-grid">'+produtos.map(function(p){
+        var icon = PACOTE_ICONS[p.nome]||PACOTE_ICONS[p.subcategoria]||'fas fa-camera';
+        var preco = p.preco>0 ? '<span style="font-size:12px;color:var(--gold);font-weight:600;">R$ '+Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>' : '';
+        return '<div class="ag-pac-card" onclick="selecionarPacoteModal(\''+p.id+'\',\''+p.nome.replace(/'/g,"\\'")+'\','+Number(p.preco||0)+')">'
+          +'<div class="ag-pac-icon"><i class="'+icon+'"></i></div>'
+          +'<div style="flex:1;min-width:0;">'
+          +'<div class="ag-pac-name">'+p.nome+'</div>'
+          +(preco?'<div>'+preco+'</div>':'')
+          +'</div>'
+          +'<div class="ag-pac-check"><i class="fas fa-check"></i></div>'
+          +'</div>';
+      }).join('')+'</div>';
+    })
+    .catch(function(){
+      body.innerHTML = '<div class="ag-modal-empty"><i class="fas fa-exclamation-circle"></i>Erro ao buscar pacotes. Tente novamente.</div>';
+    });
+};
+
+window.selecionarPacoteModal = function(id, nome, preco){
+  _pacoteSel  = nome;
+  _pacoteId   = id;
+  _pacotePreco = Number(preco)||0;
+  fecharModal();
+  goStep2();
+};
+
+window.fecharModal = function(){
+  var modal = ge('ag-modal-pacotes');
+  if(modal) modal.style.display='none';
+  document.body.style.overflow='';
+};
+
+window.fecharModalSeFora = function(e){
+  if(e.target === ge('ag-modal-pacotes')) fecharModal();
 };
 
 /* ══ STEP 2 — CALENDÁRIO ══ */
@@ -1395,6 +1418,8 @@ window.selecionarHora = function(hora){
 
 window.voltarParaPacotes = function(){
   goStep(1);
+  /* Reabre o modal de pacotes para o cliente trocar */
+  abrirModalPacotes();
 };
 window.goStep3 = function(){
   if(!_dataSel||!_horaSel) return;
