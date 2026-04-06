@@ -887,18 +887,31 @@ async function renderPacotes(){
   var r = await query.then(function(res){ return res; }).catch(function(){ return {data:[],error:true}; });
   var todos = r.data || [];
 
-  /* Filtra pelos pacotes do link (se o link tiver restrição de pacotes) */
+  /* Filtra pelos pacotes do link.
+     _linkData.pacotes contém CATEGORIAS (ex: "Smash the Cake").
+     Filtra por produto.categoria — match exato normalizado primeiro,
+     depois parcial. Se nada bater, mostra todos. */
   var produtos = todos;
   if(linkPacotes.length){
-    var nomes = linkPacotes.map(function(p){
-      return normStr((typeof p==='object'&&p!==null)?(p.nome||p.name||String(p)):String(p));
+    var cats = linkPacotes.map(function(p){
+      var raw = (typeof p==='object'&&p!==null)?(p.nome||p.name||String(p)):String(p);
+      return normStr(PACOTE_MAP[raw] || raw);
     });
+
+    /* 1ª tentativa: match exato de categoria */
     var filtrado = todos.filter(function(p){
-      var pn = normStr(p.nome||'');
       var pc = normStr(p.categoria||'');
-      return nomes.some(function(n){ return n===pn||n===pc||pn.includes(n)||n.includes(pn)||pc.includes(n)||n.includes(pc); });
+      return cats.some(function(c){ return c === pc; });
     });
-    /* Só aplica filtro se encontrou algo; caso contrário mostra todos */
+
+    /* 2ª tentativa: match parcial de categoria */
+    if(!filtrado.length){
+      filtrado = todos.filter(function(p){
+        var pc = normStr(p.categoria||'');
+        return cats.some(function(c){ return c && (pc.includes(c) || c.includes(pc)); });
+      });
+    }
+
     if(filtrado.length) produtos = filtrado;
   }
 
